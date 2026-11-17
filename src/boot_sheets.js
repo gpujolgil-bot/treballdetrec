@@ -1,7 +1,8 @@
 /* ===== Mode Google Sheets: Apps Script (google.script.run) o GitHub Pages (fetch amb clau) ===== */
 const CFG_KEY = 'trec-tribunals-connexio';
-function llegeixCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; } }
-function desaCfg(c) { try { c ? localStorage.setItem(CFG_KEY, JSON.stringify(c)) : localStorage.removeItem(CFG_KEY); } catch (e) { } }
+let CFG_MEM = null; // per si el navegador no deixa guardar res (mode privat, iframe restringit)
+function llegeixCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') || CFG_MEM; } catch (e) { return CFG_MEM; } }
+function desaCfg(c) { CFG_MEM = c; try { c ? localStorage.setItem(CFG_KEY, JSON.stringify(c)) : localStorage.removeItem(CFG_KEY); } catch (e) { } }
 const esAppsScript = () => typeof google !== 'undefined' && google.script && google.script.run;
 
 function api(accio, ...args) {
