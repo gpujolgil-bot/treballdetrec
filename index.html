@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tribunals del Treball de Recerca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="app-css">/* Eina de gestió: registre d'acta. Tinta blava-pissarra sobre paper fred, accent verd ampolla,
+   capçalera fixa amb resum, pestanyes, i files-fitxa per treball amb franja d'estat a l'esquerra. */
+:root {
+  --paper: #f4f5f3;
+  --surface: #ffffff;
+  --ink: #1c2733;
+  --muted: #5d6874;
+  --line: #d9ddd8;
+  --accent: #17695a;
+  --accent-soft: #dcece7;
+  --ok: #2f7d4f; --warn: #a86a00; --crit: #b3261e; --info: #4a5d75;
+  --warn-soft: #fbeed2; --crit-soft: #f8dcd9; --ok-soft: #dcefe2;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --chip-l: 92%; --chip-tl: 26%; --chip-s: 50%;
+  --radius: 6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12181e; --surface: #1a222a; --ink: #e4e9ee; --muted: #9aa6b2; --line: #2e3a45;
+    --accent: #4fb9a2; --accent-soft: #1d3b35;
+    --ok: #6cc28c; --warn: #e0a640; --crit: #f08a80; --info: #9db1c9;
+    --warn-soft: #3a2e14; --crit-soft: #3d1f1c; --ok-soft: #1c3526;
+    --chip-l: 24%; --chip-tl: 84%; --chip-s: 35%;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12181e; --surface: #1a222a; --ink: #e4e9ee; --muted: #9aa6b2; --line: #2e3a45;
+  --accent: #4fb9a2; --accent-soft: #1d3b35;
+  --ok: #6cc28c; --warn: #e0a640; --crit: #f08a80; --info: #9db1c9;
+  --warn-soft: #3a2e14; --crit-soft: #3d1f1c; --ok-soft: #1c3526;
+  --chip-l: 24%; --chip-tl: 84%; --chip-s: 35%;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 14px/1.45 var(--font-body); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: .01em; }
+h2 { font-size: 17px; font-weight: 600; }
+h3 { font-size: 15px; font-weight: 600; }
+.num, td.n, .tile b { font-variant-numeric: tabular-nums; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+header.top { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-top: 12px; padding-bottom: 10px; }
+.top .titol { flex: 1 1 280px; min-width: 0; }
+.top .sub { color: var(--muted); font-size: 12.5px; }
+.desa { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.estat-desa { font-size: 12.5px; color: var(--muted); }
+.estat-desa.brut { color: var(--warn); font-weight: 600; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: var(--radius); cursor: pointer; line-height: 1.3; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.btn.pri:hover { filter: brightness(1.08); }
+.btn.sm { padding: 3px 8px; font-size: 12.5px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.ghost { border-color: transparent; background: transparent; }
+
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; }
+nav.tabs a { padding: 8px 14px; color: var(--muted); text-decoration: none; border-bottom: 3px solid transparent; font-weight: 500; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs a .badge { margin-left: 6px; }
+
+.resum { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.tile span { color: var(--muted); font-size: 12px; }
+.tile b { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+.tile small { color: var(--muted); font-size: 12px; }
+.tile.crit b { color: var(--crit); } .tile.ok b { color: var(--ok); }
+
+.banner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: var(--radius); background: var(--accent-soft); margin: 12px 0 0; }
+.banner.warn { background: var(--warn-soft); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 12px; }
+.toolbar .sp { flex: 1; }
+.toolbar input[type=search], .toolbar select, .field input, .field select { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; }
+.toolbar input[type=search] { min-width: 220px; }
+label.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+
+.chip { --h: 200; display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: hsl(var(--h) var(--chip-s) var(--chip-l)); color: hsl(var(--h) 45% var(--chip-tl)); white-space: nowrap; }
+.badge { display: inline-block; min-width: 18px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 700; text-align: center; background: var(--crit); color: var(--surface); }
+.badge.avis { background: var(--warn); }
+.pill { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11.5px; font-weight: 600; }
+.pill.crit { background: var(--crit-soft); color: var(--crit); }
+.pill.avis { background: var(--warn-soft); color: var(--warn); }
+.pill.info { background: var(--accent-soft); color: var(--info); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+
+/* Files de treball */
+.llista { display: flex; flex-direction: column; gap: 8px; }
+.cap-llista { display: grid; grid-template-columns: var(--cols); gap: 10px; padding: 0 12px 0 16px; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-family: var(--font-display); }
+.llista, .cap-llista { --cols: minmax(220px, 2.1fr) minmax(130px, 1fr) repeat(3, minmax(160px, 1.15fr)); }
+.fila { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--ok); border-radius: var(--radius); padding: 10px 12px; }
+.fila.avis { border-left-color: var(--warn); }
+.fila.crit { border-left-color: var(--crit); }
+.fila.inactiu { border-left-color: var(--line); opacity: .8; }
+.fila.flash { box-shadow: 0 0 0 3px var(--accent); }
+.fila .g { display: grid; grid-template-columns: var(--cols); gap: 10px; align-items: start; }
+.al .nomal { font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.al .nomal:hover { color: var(--accent); text-decoration: underline; }
+.al .meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+.al .tt { color: var(--muted); font-size: 13px; margin-top: 3px; overflow-wrap: anywhere; }
+.grup { font-family: var(--font-mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; color: var(--muted); }
+.tut { font-size: 13px; }
+.tut .rol, .seient .rol { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.seient { display: flex; flex-direction: column; gap: 3px; }
+.seient .ctl { display: flex; gap: 4px; align-items: stretch; }
+.seient select { flex: 1; min-width: 0; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 5px 6px; font-size: 13px; }
+.seient select.t0 { border-left-color: var(--accent); }
+.seient select.t1 { border-left-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.seient select.t2 { border-left-color: var(--warn); background: var(--warn-soft); }
+.seient select.buit { border-left-color: var(--crit); background: var(--crit-soft); }
+.lock { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); width: 30px; display: grid; place-items: center; cursor: pointer; color: var(--muted); padding: 0; }
+.lock[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.lock svg { width: 14px; height: 14px; }
+.seient .tier { font-size: 11px; color: var(--muted); }
+.detall { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 14px; }
+.detall .desc { grid-column: 1 / -1; color: var(--muted); max-width: 90ch; }
+.field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); }
+.field input, .field select { color: var(--ink); font-size: 13px; }
+.sessio { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.seccio { margin: 22px 0 8px; display: flex; gap: 10px; align-items: baseline; }
+.seccio small { color: var(--muted); }
+
+/* Taules */
+.taula-w { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--paper); position: sticky; top: 0; }
+td.n, th.n { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+tr.grp td { background: var(--paper); font-family: var(--font-display); font-weight: 600; }
+.bar { position: relative; height: 8px; background: var(--paper); border-radius: 4px; min-width: 90px; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 4px; }
+.bar i.tut { background: color-mix(in srgb, var(--accent) 40%, var(--paper)); }
+.bar.sobre i { background: var(--warn); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--ink); cursor: pointer; text-align: left; font-weight: 500; }
+.linkbtn:hover { color: var(--accent); text-decoration: underline; }
+
+/* Informes */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--surface); padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.fitxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+.fitxa { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.fitxa .tt { font-weight: 600; }
+.fitxa dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: 13px; }
+.fitxa dt { color: var(--muted); }
+.fitxa dd { margin: 0; }
+.prof { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.prof header { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+.prof header small { color: var(--muted); }
+.inc { display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.inc:last-child { border-bottom: 0; }
+.inc .linkbtn { font-weight: 400; }
+
+/* Configuració */
+.afi { display: grid; grid-template-columns: 150px 1fr; gap: 8px 12px; align-items: start; }
+.afi .opc { display: flex; flex-wrap: wrap; gap: 5px; }
+.tog { border: 1px dashed var(--line); background: transparent; border-radius: 999px; padding: 1px 8px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.tog[aria-pressed="true"] { border-style: solid; border-color: transparent; background: hsl(var(--h) var(--chip-s) var(--chip-l)); color: hsl(var(--h) 45% var(--chip-tl)); font-weight: 600; }
+.panell { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
+.panell p { margin: 0; color: var(--muted); max-width: 75ch; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 9px 16px; border-radius: var(--radius); font-size: 13px; z-index: 50; max-width: calc(100% - 32px); }
+.dlg-bg { position: fixed; inset: 0; background: rgb(0 0 0 / .35); display: grid; place-items: center; z-index: 60; padding: 16px; }
+.dlg { background: var(--surface); border-radius: var(--radius); padding: 18px; max-width: 460px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.dlg .row { justify-content: flex-end; }
+.buit-txt { color: var(--muted); padding: 24px; text-align: center; }
+main { padding-bottom: 60px; }
+
+@media (max-width: 960px) {
+  .cap-llista { display: none; }
+  .fila .g { grid-template-columns: 1fr 1fr; }
+  .fila .g .al { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .wrap { padding: 0 16px; }
+  .fila .g { grid-template-columns: 1fr; }
+  .toolbar input[type=search] { min-width: 0; flex: 1 1 100%; }
+  .afi { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fila { transition: box-shadow .3s; }
+}
+
+/* Tribunals (fitxa per tribunal) */
+.trib { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--ok); border-radius: var(--radius); scroll-margin-top: 130px; }
+.trib.avis { border-left-color: var(--warn); }
+.trib.crit { border-left-color: var(--crit); }
+.trib.flash { box-shadow: 0 0 0 3px var(--accent); }
+.trib > header { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.trib > header h2 { font-size: 18px; }
+.trib > header .meta { display: flex; gap: 5px; flex-wrap: wrap; }
+.trib > header .sp { flex: 1; }
+.trib > header .lock { height: 30px; }
+.trib-cos { display: grid; grid-template-columns: minmax(250px, 320px) 1fr; }
+.membres { padding: 12px 14px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.membres h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.membres ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.membres li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.membres .mnom { font-weight: 600; }
+.membres .mrol { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+.membres .btn.ghost { padding: 0 4px; font-size: 12px; color: var(--crit); }
+.membres select { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 5px 6px; font-size: 13px; }
+.defensa { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.defensa .field:last-child { grid-column: 1 / -1; }
+.defensa input { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 5px 6px; }
+.alumnes { border: 0; border-radius: 0; }
+.alumnes td .tt { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.alumnes select { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 4px 6px; font-size: 12.5px; }
+.linkpill { border: 0; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600; }
+table.mini { font-size: 12.5px; }
+table.mini th { position: static; }
+.llista { gap: 14px; }
+@media (max-width: 860px) {
+  .trib-cos { grid-template-columns: 1fr; }
+  .membres { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+/* Correus */
+.panell textarea, .panell input:not([type=checkbox]):not([type=number]), .correus-g input.mail { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; font: inherit; color: var(--ink); width: 100%; }
+.panell textarea { resize: vertical; }
+.panell details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+.correus-g { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.correus-g input.mail { min-width: 200px; padding: 4px 6px; font-size: 13px; }
+.correus-g input.mail.mal { border-color: var(--crit); background: var(--crit-soft); }
+.correus-g tr.sel td { background: var(--accent-soft); }
+.previ { position: sticky; top: 140px; max-height: calc(100vh - 160px); overflow: auto; }
+.previ .mostra { background: #fff; color: #1c2733; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; overflow-x: auto; }
+@media (max-width: 1000px) { .correus-g { grid-template-columns: 1fr; } .previ { position: static; max-height: none; } }
+.previ .mostra p { margin: 0 0 10px; color: inherit; max-width: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script id="estat" type="application/json">{"treballs": [], "teachers": {}, "tribunals": [], "config": {}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script id="app-js">/* ===== Nucli: tribunals de 4 treballs avaluats pels seus tutors (sense DOM) ===== */
+const DEPTS = ['Administratiu','Castellà','Català','Educació Física','Experimentals','Expressió','FOL','Idiomes','Informàtica','Matemàtiques','Orientació','PQPI','Sanitàries','Socials','Tecnologia'];
+const AFINITATS_DEFECTE = {
+  'Experimentals': ['Sanitàries','Matemàtiques','Tecnologia','Educació Física'],
+  'Sanitàries': ['Experimentals','Educació Física','Orientació'],
+  'Tecnologia': ['Experimentals','Matemàtiques','Informàtica'],
+  'Informàtica': ['Tecnologia','Matemàtiques'],
+  'Matemàtiques': ['Experimentals','Tecnologia','Informàtica'],
+  'Educació Física': ['Experimentals','Sanitàries','Orientació'],
+  'Orientació': ['Socials','Experimentals','Sanitàries','Educació Física'],
+  'Socials': ['Orientació','Català','Castellà','Administratiu','FOL'],
+  'Català': ['Castellà','Idiomes','Socials','Expressió'],
+  'Castellà': ['Català','Idiomes','Socials','Expressió'],
+  'Idiomes': ['Català','Castellà','Socials'],
+  'Expressió': ['Català','Castellà','Socials','Educació Física'],
+  'Administratiu': ['Socials','FOL'],
+  'FOL': ['Socials','Administratiu','Orientació'],
+  'PQPI': ['Orientació','Socials']
+};
+const COST_TIER = [0, 10, 60];
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function actius(S) { return S.treballs.filter(t => t.estat === 'actiu'); }
+function preparat(t) { return t.estat === 'actiu' && t.tutors.length > 0 && !!t.ambit; }
+function poolKeys(S) { return Object.keys(S.teachers).filter(k => S.teachers[k].pool); }
+function midaT(S) { return S.config.midaTribunal || 4; }
+function trib(S, id) { return S.tribunals.find(x => x.id === id); }
+function treballsDe(S, tr) { return S.treballs.filter(t => t.tribunal === tr.id && t.estat === 'actiu'); }
+
+/* 0 = mateix departament que l'àmbit, 1 = departament afí, 2 = no afí */
+function tier(S, k, ambit) {
+  const t = S.teachers[k];
+  if (!t || !ambit) return 2;
+  if (t.depts.includes(ambit)) return 0;
+  const af = S.config.afinitats[ambit] || [];
+  return t.depts.some(d => af.includes(d)) ? 1 : 2;
+}
+
+function membresTrib(S, tr) {
+  const out = [];
+  for (const t of treballsDe(S, tr)) for (const k of t.tutors) if (!out.includes(k)) out.push(k);
+  for (const k of tr.extra || []) if (!out.includes(k)) out.push(k);
+  return out;
+}
+function rolsTrib(S, tr) {
+  const r = {};
+  for (const t of treballsDe(S, tr)) for (const k of t.tutors) (r[k] = r[k] || []).push(t);
+  return r;
+}
+
+/* Per a un treball: qui l'avalua a part del seu tutor i com d'afins són */
+function avaluadors(S, t) {
+  const tr = t.tribunal && trib(S, t.tribunal);
+  if (!tr) return [];
+  return membresTrib(S, tr).filter(k => !t.tutors.includes(k)).map(k => ({ k, tier: tier(S, k, t.ambit) }));
+}
+
+function ambitPrincipal(S, tr) {
+  const c = {};
+  for (const t of treballsDe(S, tr)) if (t.ambit) c[t.ambit] = (c[t.ambit] || 0) + 1;
+  return Object.keys(c).sort((a, b) => c[b] - c[a] || a.localeCompare(b))[0] || '';
+}
+
+function carregues(S) {
+  const c = {};
+  for (const k of Object.keys(S.teachers)) c[k] = { tutor: 0, tribunals: [], extra: 0 };
+  for (const t of actius(S)) for (const k of t.tutors) if (c[k]) c[k].tutor++;
+  for (const tr of S.tribunals) {
+    for (const k of membresTrib(S, tr)) if (c[k]) c[k].tribunals.push(tr.id);
+    for (const k of tr.extra || []) if (c[k]) c[k].extra++;
+  }
+  return c;
+}
+
+/* Cost d'un grup de treballs (llista) com a tribunal, sense membres afegits */
+function costGrup(S, ws, mida) {
+  const tut = [];
+  let cost = 0;
+  for (const w of ws) for (const k of w.tutors) tut.push(k);
+  const uniq = [...new Set(tut)];
+  for (const w of ws) for (const k of uniq) if (!w.tutors.includes(k)) cost += COST_TIER[tier(S, k, w.ambit)];
+  cost += (tut.length - uniq.length) * 400;              // mateix tutor dos cops al tribunal
+  cost += Math.max(0, mida - uniq.length) * 25;           // caldrà afegir membres
+  return cost;
+}
+
+function costTotal(S) {
+  let c = 0;
+  for (const tr of S.tribunals) c += costGrup(S, treballsDe(S, tr), midaT(S));
+  return c;
+}
+
+/* Proposta: manté els tribunals bloquejats i reparteix la resta de treballs
+   en tribunals de mida fixa, minimitzant el cost d'afinitat (recuit simulat). */
+function proposa(S, opts) {
+  const { seed = Date.now(), iter = 60000, intents = 4 } = opts || {};
+  const rand = rng(seed), mida = midaT(S);
+  const bloq = S.tribunals.filter(t => t.bloq);
+  const lliures = S.treballs.filter(t => preparat(t) && !(t.tribunal && bloq.some(b => b.id === t.tribunal)));
+  for (const t of S.treballs) if (!bloq.some(b => b.id === t.tribunal)) t.tribunal = null;
+  const vells = S.tribunals.filter(t => !t.bloq);
+  S.tribunals = bloq.slice();
+  if (!lliures.length) return 0;
+  const n = Math.ceil(lliures.length / mida);
+  const base = Math.floor(lliures.length / n), resta = lliures.length % n;
+  const mides = Array.from({ length: n }, (_, i) => base + (i < resta ? 1 : 0));
+
+  let millor = null, mc = Infinity;
+  for (let r = 0; r < intents; r++) {
+    // inicial: ordenat per àmbit amb soroll
+    const ord = lliures.map(t => ({ t, k: t.ambit + rand() })).sort((a, b) => a.k < b.k ? -1 : 1).map(o => o.t);
+    const grups = []; let p = 0;
+    for (const m of mides) { grups.push(ord.slice(p, p + m)); p += m; }
+    let costs = grups.map(g => costGrup(S, g, mida));
+    let total = costs.reduce((a, b) => a + b, 0);
+    let T = 40;
+    for (let it = 0; it < iter; it++) {
+      const a = Math.floor(rand() * n), b = Math.floor(rand() * n);
+      if (a === b) continue;
+      const i = Math.floor(rand() * grups[a].length), j = Math.floor(rand() * grups[b].length);
+      const ga = grups[a].slice(), gb = grups[b].slice();
+      const x = ga[i]; ga[i] = gb[j]; gb[j] = x;
+      const ca = costGrup(S, ga, mida), cb = costGrup(S, gb, mida);
+      const d = ca + cb - costs[a] - costs[b];
+      if (d <= 0 || rand() < Math.exp(-d / T)) { grups[a] = ga; grups[b] = gb; costs[a] = ca; costs[b] = cb; total += d; }
+      T = Math.max(0.05, T * 0.99985);
+    }
+    if (total < mc) { mc = total; millor = grups.map(g => g.slice()); }
+  }
+  // Ordena els tribunals per àmbit perquè la numeració tingui sentit
+  const ambG = g => { const c = {}; g.forEach(t => c[t.ambit] = (c[t.ambit] || 0) + 1); return Object.keys(c).sort((a, b) => c[b] - c[a] || a.localeCompare(b))[0]; };
+  millor.sort((a, b) => ambG(a).localeCompare(ambG(b), 'ca'));
+  const usats = new Set(S.tribunals.map(t => t.num));
+  let num = 1;
+  millor.forEach((g, idx) => {
+    while (usats.has(num)) num++;
+    const vell = vells[idx] || {};
+    const tr = { id: 'T' + Date.now().toString(36) + idx + Math.floor(rand() * 1e4), num, extra: [], data: vell.data || '', hora: vell.hora || '', aula: vell.aula || '', bloq: false };
+    usats.add(num);
+    S.tribunals.push(tr);
+    g.forEach(t => { t.tribunal = tr.id; });
+  });
+  S.tribunals.sort((a, b) => a.num - b.num);
+  completaMembres(S);
+  return mc;
+}
+
+/* Si un tribunal no arriba a la mida (menys tutors diferents que places),
+   hi afegeix professorat del pool, el més afí i amb menys tribunals. */
+function completaMembres(S, nomesTr) {
+  const mida = midaT(S);
+  for (const tr of S.tribunals) {
+    if (nomesTr && tr.id !== nomesTr) continue;
+    tr.extra = tr.extra || [];
+    const ws = treballsDe(S, tr);
+    if (!ws.length) continue;
+    while (membresTrib(S, tr).length < mida) {
+      const c = carregues(S), mem = membresTrib(S, tr);
+      let best = null, bs = Infinity;
+      for (const k of poolKeys(S)) {
+        if (mem.includes(k)) continue;
+        const s = ws.reduce((a, w) => a + COST_TIER[tier(S, k, w.ambit)], 0) + c[k].tribunals.length * 8;
+        if (s < bs) { bs = s; best = k; }
+      }
+      if (!best) break;
+      tr.extra.push(best);
+    }
+  }
+}
+
+function solapa(a, b) { return a.data && a.hora && a.data === b.data && a.hora === b.hora; }
+
+function incidencies(S) {
+  const out = [], mida = midaT(S);
+  const nom = k => (S.teachers[k] ? S.teachers[k].nom : k);
+  const al = t => `${t.cognoms}, ${t.nom}`;
+  for (const t of actius(S)) {
+    if (!t.tutors.length) out.push({ niv: 'crit', t: t.id, msg: `${al(t)}: no té tutor/a assignat.` });
+    if (!t.ambit) out.push({ niv: 'crit', t: t.id, msg: `${al(t)}: falta l'àmbit (departament) del treball.` });
+    if (preparat(t) && !t.tribunal) out.push({ niv: 'crit', t: t.id, msg: `${al(t)}: no està en cap tribunal.` });
+    if (t.tribunal) {
+      const no = avaluadors(S, t).filter(a => a.tier === 2);
+      if (no.length) out.push({ niv: 'avis', t: t.id, msg: `${al(t)} (${t.ambit}): ${no.map(a => nom(a.k)).join(', ')} ${no.length > 1 ? 'no són' : 'no és'} de departaments afins.` });
+    }
+    if (!t.titol && t.tutors.length) out.push({ niv: 'info', t: t.id, msg: `${al(t)}: no hi ha títol.` });
+    if (t.ambitDeduit) out.push({ niv: 'info', t: t.id, msg: `${al(t)}: àmbit deduït del departament del tutor/a (${t.ambit}). Revisa'l.` });
+    for (const k of t.tutors) if (S.teachers[k] && S.teachers[k].foraOrg) out.push({ niv: 'info', t: t.id, msg: `${al(t)}: ${nom(k)} no surt a l'organigrama; departament provisional ${S.teachers[k].depts[0]}.` });
+  }
+  for (const tr of S.tribunals) {
+    const ws = treballsDe(S, tr), mem = membresTrib(S, tr), r = rolsTrib(S, tr);
+    if (!ws.length) { out.push({ niv: 'info', tr: tr.id, msg: `Tribunal ${tr.num}: no té cap treball.` }); continue; }
+    if (mem.length < mida) out.push({ niv: 'crit', tr: tr.id, msg: `Tribunal ${tr.num}: només té ${mem.length} membres (cal ${mida}).` });
+    if (ws.length > mida) out.push({ niv: 'avis', tr: tr.id, msg: `Tribunal ${tr.num}: avalua ${ws.length} treballs (previst ${mida}).` });
+    for (const k in r) if (r[k].length > 1) out.push({ niv: 'info', tr: tr.id, msg: `Tribunal ${tr.num}: ${nom(k)} hi té ${r[k].length} alumnes tutoritzats.` });
+  }
+  const trs = S.tribunals;
+  for (let i = 0; i < trs.length; i++) for (let j = i + 1; j < trs.length; j++) {
+    if (!solapa(trs[i], trs[j])) continue;
+    const mj = membresTrib(S, trs[j]);
+    for (const k of membresTrib(S, trs[i]).filter(x => mj.includes(x)))
+      out.push({ niv: 'crit', tr: trs[i].id, msg: `${nom(k)} és als tribunals ${trs[i].num} i ${trs[j].num} el mateix dia i hora (${trs[i].data} ${trs[i].hora}).` });
+  }
+  return out;
+}
+
+if (false) module.exports = { DEPTS, AFINITATS_DEFECTE, proposa, carregues, incidencies, tier, preparat, poolKeys, membresTrib, treballsDe, avaluadors, costTotal, ambitPrincipal };
+
+/* ===== Conversió entre el Google Sheets i l'estat de l'eina ===== */
+const CAPS = {
+  Alumnes: ['ID', 'Cognoms', 'Nom', 'Grup', 'Títol', 'Àmbit', 'Tutor/a', 'Cotutor/a', 'Estat', 'Tribunal', 'Descripció', 'Nota'],
+  Professorat: ['Nom', 'Departament', 'Correu', 'Disponible', 'Cap de departament', 'Observacions'],
+  Tribunals: ['Tribunal', 'Data', 'Hora', 'Aula', 'Bloquejat', 'Membres afegits', 'Membres (automàtic)', 'Alumnes (automàtic)'],
+  Config: ['Clau', 'Valor'],
+  Enviaments: ['Professor/a', 'Correu', 'Tipus', 'Data', 'Tribunals', 'Empremta']
+};
+const ESTATS = { actiu: 'Necessita tribunal', fet: 'Ja té el TR fet', baixa: 'Baixa' };
+
+function _files(f, nom) {
+  const v = (f && f[nom]) || [];
+  if (!v.length) return [];
+  const cap = v[0].map(x => String(x).trim());
+  return v.slice(1).filter(r => r.some(c => String(c).trim() !== '')).map(r => {
+    const o = {}; cap.forEach((c, i) => { o[c] = r[i] == null ? '' : String(r[i]).trim(); }); return o;
+  });
+}
+const _si = v => /^(s[ií]|si|x|true|1|yes)$/i.test(String(v || '').trim());
+function normData(v) {
+  v = String(v || '').trim(); if (!v) return '';
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; }
+  return v;
+}
+function normHora(v) {
+  v = String(v || '').trim(); const m = v.match(/^(\d{1,2})[:.h](\d{2})/); return m ? `${m[1].padStart(2, '0')}:${m[2]}` : v;
+}
+
+function estatDesDeFulls(f) {
+  const cfg = {}; _files(f, 'Config').forEach(r => { if (r.Clau) cfg[r.Clau] = r.Valor; });
+  const json = (s, d) => { try { return s ? JSON.parse(s) : d; } catch (e) { return d; } };
+  const S = {
+    v: 3, curs: cfg.curs || 'Curs 2026-2027', savedAt: null,
+    config: { midaTribunal: parseInt(cfg.midaTribunal, 10) || 4, afinitats: json(cfg.afinitats, null) || JSON.parse(JSON.stringify(AFINITATS_DEFECTE)) },
+    correu: json(cfg.correu, {}), teachers: {}, treballs: [], tribunals: [], enviaments: {}
+  };
+  for (const r of _files(f, 'Professorat')) {
+    if (!r.Nom) continue;
+    const depts = r.Departament.split('/').map(x => x.trim()).filter(Boolean);
+    S.teachers[r.Nom] = { nom: r.Nom, depts: depts.length ? depts : ['Experimentals'], email: r.Correu, pool: !/^no$/i.test(r.Disponible), cap: _si(r['Cap de departament']) ? [depts[0]] : [],
+      foraOrg: /organigrama/i.test(r.Observacions), afegit: /afegit/i.test(r.Observacions), obs: r.Observacions };
+  }
+  const prof = (nom, ambit) => {
+    nom = String(nom || '').trim(); if (!nom) return null;
+    if (S.teachers[nom]) return nom;
+    const n = normTxt(nom), k = Object.keys(S.teachers).find(x => normTxt(x) === n);
+    if (k) return k;
+    S.teachers[nom] = { nom, depts: [ambit || 'Experimentals'], email: '', pool: true, cap: [], foraOrg: true, obs: 'No surt a l\'organigrama' };
+    return nom;
+  };
+  const trNums = new Set();
+  for (const r of _files(f, 'Tribunals')) {
+    const n = parseInt(r.Tribunal, 10); if (!n || trNums.has(n)) continue; trNums.add(n);
+    S.tribunals.push({ id: 'T' + n, num: n, data: normData(r.Data), hora: normHora(r.Hora), aula: r.Aula, bloq: _si(r.Bloquejat),
+      extra: r['Membres afegits'].split(/[;\n]/).map(x => prof(x)).filter(Boolean) });
+  }
+  let i = 0;
+  for (const r of _files(f, 'Alumnes')) {
+    i++; if (!r.Cognoms && !r.Nom) continue;
+    const estat = Object.keys(ESTATS).find(k => normTxt(ESTATS[k]) === normTxt(r.Estat)) || (/fet/i.test(r.Estat) ? 'fet' : /baixa/i.test(r.Estat) ? 'baixa' : 'actiu');
+    const ambit = DEPTS.find(d => normTxt(d) === normTxt(r['Àmbit'])) || r['Àmbit'];
+    const tutors = [prof(r['Tutor/a'], ambit), prof(r['Cotutor/a'], ambit)].filter(Boolean);
+    const n = parseInt(r.Tribunal, 10);
+    if (n && !trNums.has(n)) { trNums.add(n); S.tribunals.push({ id: 'T' + n, num: n, data: '', hora: '', aula: '', bloq: false, extra: [] }); }
+    S.treballs.push({ id: r.ID || 'a' + i, cognoms: r.Cognoms, nom: r.Nom, grup: r.Grup, titol: r['Títol'], descripcio: r['Descripció'], nota: r.Nota,
+      ambit, ambitDeduit: /deduït/i.test(r.Nota), tutors: [...new Set(tutors)], estat, tribunal: n ? 'T' + n : null });
+  }
+  S.tribunals.sort((a, b) => a.num - b.num);
+  for (const r of _files(f, 'Enviaments')) {
+    const k = prof(r['Professor/a']); if (!k) continue;
+    S.enviaments[k] = { tipus: /esborrany/i.test(r.Tipus) ? 'esborrany' : 'enviat', quan: r.Data, empremta: r.Empremta };
+  }
+  return S;
+}
+
+function fullsDesDeEstat(S) {
+  const nom = k => (S.teachers[k] ? S.teachers[k].nom : k);
+  const out = {};
+  out.Alumnes = [CAPS.Alumnes, ...S.treballs.map(t => {
+    const tr = t.tribunal && S.tribunals.find(x => x.id === t.tribunal);
+    return [t.id, t.cognoms, t.nom, t.grup, t.titol, t.ambit, t.tutors[0] ? nom(t.tutors[0]) : '', t.tutors[1] ? nom(t.tutors[1]) : '', ESTATS[t.estat] || ESTATS.actiu, tr ? tr.num : '', t.descripcio || '', t.nota || ''];
+  })];
+  const ks = Object.keys(S.teachers).sort((a, b) => (S.teachers[a].depts[0] || '').localeCompare(S.teachers[b].depts[0] || '', 'ca') || nom(a).localeCompare(nom(b), 'ca'));
+  out.Professorat = [CAPS.Professorat, ...ks.map(k => {
+    const p = S.teachers[k];
+    const obs = p.obs || [p.foraOrg ? 'No surt a l\'organigrama' : '', p.afegit ? 'Afegit a l\'eina' : ''].filter(Boolean).join('. ');
+    return [p.nom, p.depts.join(' / '), p.email || '', p.pool ? 'Sí' : 'No', p.cap && p.cap.length ? 'Sí' : '', obs];
+  })];
+  out.Tribunals = [CAPS.Tribunals, ...S.tribunals.slice().sort((a, b) => a.num - b.num).map(tr => [
+    tr.num, tr.data || '', tr.hora || '', tr.aula || '', tr.bloq ? 'Sí' : '', (tr.extra || []).map(nom).join('; '),
+    membresTrib(S, tr).map(nom).join('; '), treballsDe(S, tr).map(t => `${t.cognoms}, ${t.nom}`).join('; ')])];
+  out.Config = [CAPS.Config, ['curs', S.curs || ''], ['midaTribunal', String(S.config.midaTribunal || 4)], ['afinitats', JSON.stringify(S.config.afinitats)], ['correu', JSON.stringify(S.correu || {})]];
+  out.Enviaments = [CAPS.Enviaments, ...Object.keys(S.enviaments || {}).filter(k => S.teachers[k]).map(k => {
+    const e = S.enviaments[k];
+    return [nom(k), S.teachers[k].email || '', e.tipus === 'enviat' ? 'Enviat' : 'Esborrany', e.quan, S.tribunals.filter(tr => membresTrib(S, tr).includes(k)).map(tr => tr.num).join(', '), e.empremta || ''];
+  })];
+  // Tot com a text perquè el Sheets no reinterpreti dates, hores ni números
+  for (const f in out) out[f] = out[f].map(r => r.map(c => c == null ? '' : String(c)));
+  return out;
+}
+
+/* Per passar l'estat de l'eina antiga (claus normalitzades) a claus = nom */
+function rekeyPerNom(S) {
+  const map = {}, T = {};
+  for (const k in S.teachers) { const n = S.teachers[k].nom; map[k] = n; T[n] = S.teachers[k]; }
+  S.teachers = T;
+  for (const t of S.treballs) t.tutors = t.tutors.map(k => map[k] || k);
+  for (const tr of S.tribunals) tr.extra = (tr.extra || []).map(k => map[k] || k);
+  const e = {}; for (const k in (S.enviaments || {})) e[map[k] || k] = S.enviaments[k]; S.enviaments = e;
+  return S;
+}
+
+if (false) module.exports = { estatDesDeFulls, fullsDesDeEstat, rekeyPerNom, CAPS };
+
+/* ===== Interfície ===== */
+const APP_CSS = document.getElementById('app-css').textContent;
+const APP_JS = document.getElementById('app-js').textContent;
+const ESTAT_TXT = document.getElementById('estat').textContent;
+const ESTAT_TXT_NORM = JSON.stringify(JSON.parse(ESTAT_TXT));
+let BASE_NORM = ESTAT_TXT_NORM;
+let MODE = 'artifact';
+let S = JSON.parse(ESTAT_TXT);
+
+function normalitza() {
+  if (!S.config) S.config = {};
+  if (!S.config.afinitats) S.config.afinitats = JSON.parse(JSON.stringify(AFINITATS_DEFECTE));
+  if (!S.config.midaTribunal) S.config.midaTribunal = 4;
+  if (!S.tribunals) S.tribunals = [];
+  for (const t of S.treballs) if (t.tribunal === undefined) t.tribunal = null;
+  S.correu = Object.assign({}, CORREU_DEFECTE, S.correu || {});
+  if (!S.enviaments) S.enviaments = {};
+}
+
+const UI = { tab: 'tribunals', q: '', ambit: '', nomesInc: false, profQ: '', profVista: 'pool', profOrdre: 'dept', inf: 'fitxes', infProf: '', dirty: false, undo: [], proposta: false };
+let artifactCap = null, downloadsCap = null;
+const DRAFT_KEY = 'trec-tribunals-v2-esborrany';
+
+const $ = (s, el) => (el || document).querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hue = d => { const i = DEPTS.indexOf(d); return i < 0 ? 210 : Math.round((i * 360 / DEPTS.length + 12) % 360); };
+const chip = (d, n) => d ? `<span class="chip" style="--h:${hue(d)}">${esc(d)}${n > 1 ? ' ×' + n : ''}</span>` : '<span class="pill crit">Sense àmbit</span>';
+const nomP = k => (S.teachers[k] ? S.teachers[k].nom : '—');
+const dept0 = k => (S.teachers[k] ? S.teachers[k].depts[0] : '');
+const deptP = k => (S.teachers[k] ? S.teachers[k].depts.join(' / ') : '');
+const alumne = t => `${t.cognoms}${t.nom ? ', ' + t.nom : ''}`;
+const nomTr = tr => tr ? `Tribunal ${tr.num}` : 'Sense tribunal';
+const dataCurta = d => d ? new Date(d + 'T00:00').toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+const defensa = tr => [dataCurta(tr.data), tr.hora, tr.aula].filter(Boolean).join(' · ');
+const ICON_LOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+const ICON_UNLOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5-.5"/></svg>';
+const TIER_TXT = ['mateix departament', 'departament afí', 'no afí'];
+
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3400);
+}
+function dialeg(titol, text, accions) {
+  return new Promise(res => {
+    const bg = document.createElement('div'); bg.className = 'dlg-bg';
+    bg.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h2 id="dlg-t">${esc(titol)}</h2><p>${esc(text)}</p><div class="row">${accions.map((a, i) => `<button class="btn ${a.pri ? 'pri' : ''}" data-i="${i}">${esc(a.txt)}</button>`).join('')}</div></div>`;
+    bg.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button[data-i]'); if (b) { bg.remove(); res(accions[+b.dataset.i].v); } else if (e.target === bg) { bg.remove(); res(null); } });
+    document.body.appendChild(bg); bg.querySelector('button').focus();
+  });
+}
+
+/* ---- Estat i desat ---- */
+function muta(fn, opts) {
+  UI.undo.push(JSON.stringify(S)); if (UI.undo.length > 40) UI.undo.shift();
+  fn();
+  UI.dirty = true; desaEsborrany();
+  if (!(opts && opts.noRender)) render();
+}
+function desfes() {
+  if (!UI.undo.length) return;
+  S = JSON.parse(UI.undo.pop()); UI.dirty = true; desaEsborrany(); render(); toast('Canvi desfet');
+}
+function desaEsborrany() { try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ base: S.savedAt || null, estat: S })); } catch (e) { } }
+function llegeixEsborrany() {
+  try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); return d && d.base === (S.savedAt || null) && d.estat && d.estat.tribunals && JSON.stringify(d.estat) !== BASE_NORM ? d : null; } catch (e) { return null; }
+}
+function esborraEsborrany() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) { } }
+
+function documentComplet(estat) {
+  const json = JSON.stringify(estat).replace(/</g, '\\u003c');
+  return `<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tribunals del Treball de Recerca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="app-css">${APP_CSS}</style>
+</head>
+<body>
+<div id="app"></div>
+<script id="estat" type="application/json">${json}<\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"><\/script>
+<script id="app-js">${APP_JS}<\/script>
+</body>
+</html>`;
+}
+
+async function desa() {
+  if (!artifactCap) return;
+  const estat = JSON.parse(JSON.stringify(S));
+  estat.savedAt = new Date().toISOString();
+  const btn = $('#b-desa'); if (btn) { btn.disabled = true; btn.textContent = 'Desant…'; }
+  try {
+    esborraEsborrany();
+    await artifactCap.publish(documentComplet(estat));
+    UI.dirty = false; S.savedAt = estat.savedAt; renderCap();
+    toast('Desat. Tothom qui obri l\'enllaç veurà aquesta versió.');
+  } catch (e) {
+    desaEsborrany();
+    const c = e && e.code;
+    if (c === 'conflict') toast('Una altra persona ha desat abans. La pàgina es recarrega amb la seva versió.');
+    else if (c === 'not_granted' || c === 'not_writer') toast('Només tens permís de lectura. Descarrega una còpia de seguretat des de Configuració.');
+    else toast('No s\'ha pogut desar (' + (c || 'error') + '). Torna-ho a provar.');
+    renderCap();
+  }
+}
+async function descarrega(filename, data) {
+  if (!downloadsCap) { toast('Aquesta vista no permet descàrregues. Fes servir «Copia per a Excel».'); return; }
+  try { await downloadsCap.save({ filename, data }); }
+  catch (e) { if (e && e.code !== 'declined') toast('No s\'ha pogut descarregar (' + (e.code || 'error') + ').'); }
+}
+
+/* ---- Derivats ---- */
+function incPerTrib(inc, tr) {
+  const ids = new Set(treballsDe(S, tr).map(t => t.id));
+  return inc.filter(i => i.tr === tr.id || (i.t && ids.has(i.t)));
+}
+function nivell(llista) { return llista.some(i => i.niv === 'crit') ? 'crit' : llista.some(i => i.niv === 'avis') ? 'avis' : ''; }
+function ambitsTrib(tr) {
+  const c = {}; treballsDe(S, tr).forEach(t => { if (t.ambit) c[t.ambit] = (c[t.ambit] || 0) + 1; });
+  return Object.keys(c).sort((a, b) => c[b] - c[a]).map(a => chip(a, c[a])).join(' ');
+}
+function profsOrdenats(keys) { return keys.slice().sort((a, b) => nomP(a).localeCompare(nomP(b), 'ca')); }
+function tribsDe(k) { return S.tribunals.filter(tr => membresTrib(S, tr).includes(k)); }
+function ambits() { return [...new Set(S.treballs.map(t => t.ambit).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ca')); }
+function resumAfinitat(t) {
+  const av = avaluadors(S, t);
+  if (!t.tribunal) return '';
+  const n = [0, 0, 0]; av.forEach(a => n[a.tier]++);
+  const parts = [];
+  if (n[0]) parts.push(`<span class="pill ok">${n[0]} mateix dept.</span>`);
+  if (n[1]) parts.push(`<span class="pill info">${n[1]} afí${n[1] > 1 ? 'ns' : ''}</span>`);
+  if (n[2]) parts.push(`<span class="pill avis">${n[2]} no afí${n[2] > 1 ? 'ns' : ''}</span>`);
+  return parts.join(' ');
+}
+
+/* ---- Render ---- */
+function render() {
+  renderCap();
+  const m = $('#main');
+  if (UI.tab === 'tribunals') renderTribunals(m);
+  else if (UI.tab === 'professorat') renderProfessorat(m);
+  else if (UI.tab === 'informes') renderInformes(m);
+  else if (UI.tab === 'correus') renderCorreus(m);
+  else renderConfig(m);
+}
+
+function renderCap() {
+  const inc = incidencies(S);
+  const crit = inc.filter(i => i.niv === 'crit').length, avis = inc.filter(i => i.niv === 'avis').length;
+  const ready = S.treballs.filter(preparat);
+  const assignats = ready.filter(t => t.tribunal).length;
+  let av = [0, 0, 0]; ready.forEach(t => avaluadors(S, t).forEach(a => av[a.tier]++));
+  const totAv = av[0] + av[1] + av[2];
+  const c = carregues(S);
+  const membres = Object.keys(c).filter(k => c[k].tribunals.length);
+  const multi = membres.filter(k => c[k].tribunals.length > 1).length;
+  const dSaved = S.savedAt ? new Date(S.savedAt) : null;
+  const desaTxt = UI.dirty ? 'Canvis sense desar' : (dSaved && !isNaN(dSaved) ? (MODE === 'artifact' ? 'Desat ' : 'Al full des de ') + dSaved.toLocaleString('ca-ES', { dateStyle: 'short', timeStyle: 'short' }) : (MODE === 'artifact' ? 'Encara no s\'ha desat' : 'Connectat al Google Sheets'));
+  $('#cap').innerHTML = `
+  <header class="top"><div class="wrap">
+    <div class="titol"><h1>Tribunals del Treball de Recerca</h1><div class="sub">${esc(S.curs || 'Curs 2026-2027')} · Batxillerat · ${midaT(S)} treballs per tribunal, avaluats pels seus ${midaT(S)} tutors</div></div>
+    <div class="desa">
+      <span class="estat-desa ${UI.dirty ? 'brut' : ''}" role="status">${esc(desaTxt)}</span>
+      <button class="btn" id="b-undo" ${UI.undo.length ? '' : 'disabled'}>Desfés</button>
+      ${MODE !== 'artifact' ? `<button class="btn" id="b-recarrega" title="Torna a llegir el Google Sheets">Recarrega del full</button>` : ''}
+      ${artifactCap || MODE !== 'artifact' ? `<button class="btn pri" id="b-desa" ${UI.dirty ? '' : 'disabled'}>${MODE === 'artifact' ? 'Desa' : 'Desa al full'}</button>` : ''}
+    </div>
+  </div>
+  <div class="wrap"><nav class="tabs" aria-label="Seccions">
+    ${[['tribunals', 'Tribunals'], ['professorat', 'Professorat'], ['informes', 'Informes'], ['correus', 'Correus'], ['configuracio', 'Configuració']].map(([id, txt]) => `<a href="#${id}" ${UI.tab === id ? 'aria-current="page"' : ''}>${txt}${id === 'informes' && crit ? `<span class="badge">${crit}</span>` : ''}</a>`).join('')}
+  </nav></div></header>
+  <div class="wrap">
+    ${UI.proposta ? `<div class="banner"><span>He agrupat els treballs en tribunals de ${midaT(S)} buscant la màxima afinitat entre àmbits: cada treball l'avalua el seu tutor/a i els altres tutors del tribunal. Revisa-ho, bloqueja els tribunals que vulguis mantenir i desa.</span><button class="btn sm" id="b-tanca-prop">Entesos</button></div>` : ''}
+    ${UI.esborrany ? `<div class="banner warn"><span>Hi ha canvis sense desar d'una sessió anterior en aquest navegador.</span><button class="btn sm pri" id="b-recupera">Recupera'ls</button><button class="btn sm" id="b-descarta">Descarta</button></div>` : ''}
+    <div class="resum">
+      <div class="tile"><span>Tribunals</span><b>${S.tribunals.length}</b><small>${assignats} de ${ready.length} treballs assignats</small></div>
+      <div class="tile ${av[2] ? '' : 'ok'}"><span>Avaluacions afins</span><b>${totAv ? Math.round((av[0] + av[1]) / totAv * 100) : 0}%</b><small>${av[0]} mateix dept. · ${av[1]} afins · ${av[2]} no afins</small></div>
+      <div class="tile"><span>Professorat als tribunals</span><b>${membres.length}</b><small>${multi} en més d'un tribunal</small></div>
+      <div class="tile ${crit ? 'crit' : 'ok'}"><span>Incidències</span><b>${crit}</b><small>${avis} avisos · ${inc.length - crit - avis} per revisar</small></div>
+    </div>
+  </div>`;
+}
+
+function opcionsMembre(tr) {
+  const c = carregues(S), mem = membresTrib(S, tr), amb = ambitPrincipal(S, tr);
+  const g = [[], [], []];
+  for (const k of poolKeys(S)) if (!mem.includes(k)) g[tier(S, k, amb)].push(k);
+  let h = '<option value="">+ Afegeix un membre…</option>';
+  g.forEach((arr, i) => {
+    if (!arr.length) return;
+    arr.sort((a, b) => c[a].tribunals.length - c[b].tribunals.length || nomP(a).localeCompare(nomP(b), 'ca'));
+    h += `<optgroup label="${['Mateix departament', 'Departament afí', 'Altres'][i]} (${esc(amb)})">${arr.map(k => `<option value="${esc(k)}">${esc(nomP(k))} · ${esc(dept0(k))} · ${c[k].tribunals.length} trib.</option>`).join('')}</optgroup>`;
+  });
+  return h;
+}
+function opcionsTribunal(sel) {
+  return S.tribunals.map(tr => `<option value="${tr.id}" ${tr.id === sel ? 'selected' : ''}>${esc(nomTr(tr))} (${treballsDe(S, tr).length})</option>`).join('') + `<option value="" ${!sel ? 'selected' : ''}>Sense tribunal</option>`;
+}
+
+function filaAlumne(t) {
+  return `<tr id="f-${t.id}">
+    <td><b>${esc(alumne(t))}</b> <span class="grup">${esc(t.grup || '—')}</span><div class="tt">${esc(t.titol || 'Sense títol')}</div></td>
+    <td>${chip(t.ambit)}${t.ambitDeduit ? ' <span class="pill info" title="Deduït del departament del tutor/a">deduït</span>' : ''}</td>
+    <td>${esc(t.tutors.map(nomP).join(' / ') || '—')}</td>
+    <td>${resumAfinitat(t)}</td>
+    <td><select id="mou-${t.id}" data-mou="${t.id}" aria-label="Tribunal de ${esc(alumne(t))}">${opcionsTribunal(t.tribunal)}</select></td>
+  </tr>`;
+}
+
+function cartaTribunal(tr, inc) {
+  const ws = treballsDe(S, tr), r = rolsTrib(S, tr), mem = membresTrib(S, tr), c = carregues(S);
+  const niv = nivell(incPerTrib(inc, tr));
+  const membresH = mem.map(k => {
+    const ex = (tr.extra || []).includes(k) && !r[k];
+    const altres = c[k].tribunals.filter(id => id !== tr.id).map(id => trib(S, id)).filter(Boolean).map(x => x.num);
+    return `<li><span class="mnom">${esc(nomP(k))}</span> <span class="tier">${esc(dept0(k))}</span>
+      <span class="mrol">${ex ? 'membre afegit' : 'tutoritza ' + esc(r[k].map(t => t.cognoms.split(' ')[0]).join(' i '))}${altres.length ? ` · també al trib. ${altres.join(', ')}` : ''}</span>
+      ${ex ? `<button class="btn sm ghost" data-treu="${tr.id}" data-k="${esc(k)}" aria-label="Treu ${esc(nomP(k))}">Treu</button>` : ''}</li>`;
+  }).join('');
+  return `<article class="trib ${niv}" id="tr-${tr.id}">
+    <header>
+      <h2>${esc(nomTr(tr))}</h2>
+      <div class="meta">${ambitsTrib(tr)}</div>
+      <span class="sp"></span>
+      <button class="lock" data-lock="${tr.id}" aria-pressed="${tr.bloq ? 'true' : 'false'}" title="${tr.bloq ? 'Bloquejat: la nova proposta no el toca' : 'Bloqueja aquest tribunal'}" aria-label="Bloqueja el ${esc(nomTr(tr))}">${tr.bloq ? ICON_LOCK : ICON_UNLOCK}</button>
+      ${!ws.length ? `<button class="btn sm" data-esborra="${tr.id}">Esborra</button>` : ''}
+    </header>
+    <div class="trib-cos">
+      <div class="membres"><h3>Membres (${mem.length}/${midaT(S)})</h3><ul>${membresH || '<li class="tier">Encara no hi ha cap treball.</li>'}</ul>
+        ${ws.length ? `<select id="afg-${tr.id}" data-afegeix="${tr.id}" aria-label="Afegeix membre al ${esc(nomTr(tr))}">${opcionsMembre(tr)}</select>` : ''}
+        <div class="defensa">
+          <label class="field">Data<input type="date" id="d-data-${tr.id}" data-tr="${tr.id}" data-camp="data" value="${esc(tr.data)}"></label>
+          <label class="field">Hora<input type="time" id="d-hora-${tr.id}" data-tr="${tr.id}" data-camp="hora" value="${esc(tr.hora)}"></label>
+          <label class="field">Aula<input id="d-aula-${tr.id}" data-tr="${tr.id}" data-camp="aula" value="${esc(tr.aula)}" placeholder="Aula"></label>
+        </div>
+      </div>
+      <div class="taula-w alumnes"><table>
+        <thead><tr><th>Alumne i treball</th><th>Àmbit</th><th>Tutor/a</th><th>L'avaluen</th><th>Tribunal</th></tr></thead>
+        <tbody>${ws.map(filaAlumne).join('') || '<tr><td colspan="5" class="buit-txt">Tria «Tribunal» a la fila d\'un alumne per moure\'l aquí.</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  </article>`;
+}
+
+function renderTribunals(m) {
+  if (!$('#tb-q', m)) {
+    m.innerHTML = `<div class="wrap">
+      <div class="toolbar">
+        <input type="search" id="tb-q" placeholder="Cerca alumne, títol o professor/a" aria-label="Cerca" value="${esc(UI.q)}">
+        <select id="tb-ambit" aria-label="Àmbit"><option value="">Tots els àmbits</option>${ambits().map(g => `<option ${g === UI.ambit ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
+        <label class="chk"><input type="checkbox" id="tb-inc" ${UI.nomesInc ? 'checked' : ''}> Només amb incidències</label>
+        <span class="sp"></span>
+        <button class="btn" id="b-nou">Afegeix tribunal</button>
+        <button class="btn pri" id="b-refes" title="Torna a agrupar els treballs dels tribunals que no estan bloquejats">Nova proposta</button>
+      </div>
+      <div id="llista"></div></div>`;
+  }
+  renderLlista();
+}
+function normTxt(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function coincideixTr(tr, inc) {
+  const ws = treballsDe(S, tr);
+  if (UI.ambit && !ws.some(t => t.ambit === UI.ambit)) return false;
+  if (UI.nomesInc && !nivell(incPerTrib(inc, tr))) return false;
+  if (UI.q) {
+    const q = normTxt(UI.q);
+    const txt = normTxt([nomTr(tr), ...ws.map(t => alumne(t) + ' ' + t.titol), ...membresTrib(S, tr).map(nomP)].join(' '));
+    if (!txt.includes(q)) return false;
+  }
+  return true;
+}
+function renderLlista() {
+  const inc = incidencies(S);
+  const trs = S.tribunals.filter(tr => coincideixTr(tr, inc));
+  const sense = S.treballs.filter(t => t.estat === 'actiu' && !t.tribunal);
+  const inactius = S.treballs.filter(t => t.estat !== 'actiu');
+  let h = `<div class="llista">${trs.map(tr => cartaTribunal(tr, inc)).join('') || '<div class="buit-txt">Cap tribunal coincideix amb els filtres.</div>'}</div>`;
+  if (sense.length) h += `<div class="seccio"><h2>Treballs sense tribunal</h2><small>${sense.length}</small></div>
+    <div class="taula-w"><table><thead><tr><th>Alumne i treball</th><th>Àmbit</th><th>Tutor/a</th><th>Estat</th><th>Tribunal</th></tr></thead><tbody>${sense.map(t => preparat(t) ? filaAlumne(t) : `<tr id="f-${t.id}"><td><b>${esc(alumne(t))}</b> <span class="grup">${esc(t.grup || '—')}</span><div class="tt">${esc(t.titol || 'Sense títol')}</div></td><td>${chip(t.ambit)}</td><td>${esc(t.tutors.map(nomP).join(' / ') || '—')}</td><td colspan="2"><span class="pill crit">${!t.tutors.length ? 'Falta el tutor/a' : 'Falta l\'àmbit'}</span> <button class="btn sm" data-edita="${t.id}">Completa</button></td></tr>`).join('')}</tbody></table></div>`;
+  if (inactius.length && !UI.nomesInc) h += `<div class="seccio"><h2>No necessiten tribunal</h2><small>${inactius.length} alumnes</small></div>
+    <div class="taula-w"><table><tbody>${inactius.map(t => `<tr><td><b>${esc(alumne(t))}</b> <span class="grup">${esc(t.grup || '—')}</span></td><td>${esc(t.estat === 'baixa' ? 'Baixa' : (t.nota || 'Ja té el TR fet'))}</td><td><button class="btn sm" data-reactiva="${t.id}">Necessita tribunal</button></td></tr>`).join('')}</tbody></table></div>`;
+  $('#llista').innerHTML = h;
+}
+
+/* Editor senzill per completar un treball sense tutor o àmbit */
+async function editaTreball(id) {
+  const t = S.treballs.find(x => x.id === id);
+  const profs = profsOrdenats(Object.keys(S.teachers));
+  const bg = document.createElement('div'); bg.className = 'dlg-bg';
+  bg.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="ed-t"><h2 id="ed-t">${esc(alumne(t))}</h2>
+    <label class="field">Títol<input id="ed-titol" value="${esc(t.titol)}"></label>
+    <label class="field">Tutor/a<select id="ed-tut"><option value="">— Cap —</option>${profs.map(k => `<option value="${esc(k)}" ${t.tutors[0] === k ? 'selected' : ''}>${esc(nomP(k))} (${esc(dept0(k))})</option>`).join('')}</select></label>
+    <label class="field">Àmbit<select id="ed-amb"><option value="">— Segons el tutor/a —</option>${DEPTS.map(d => `<option ${d === t.ambit ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select></label>
+    <div class="row"><button class="btn" data-x="0">Cancel·la</button><button class="btn pri" data-x="1">Desa</button></div></div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener('click', e => {
+    e.stopPropagation();
+    const b = e.target.closest('button[data-x]'); if (!b && e.target !== bg) return;
+    if (b && b.dataset.x === '1') {
+      const tut = $('#ed-tut', bg).value, amb = $('#ed-amb', bg).value, tit = $('#ed-titol', bg).value.trim();
+      muta(() => { t.titol = tit; t.tutors = tut ? [tut] : []; t.ambit = amb || (tut ? dept0(tut) : ''); t.ambitDeduit = !amb && !!tut; });
+      toast('Treball actualitzat. Mou-lo a un tribunal o fes «Nova proposta».');
+    }
+    bg.remove();
+  });
+}
+
+function renderProfessorat(m) {
+  const c = carregues(S);
+  let keys = Object.keys(S.teachers);
+  if (UI.profVista === 'pool') keys = keys.filter(k => S.teachers[k].pool || c[k].tribunals.length);
+  if (UI.profQ) { const q = normTxt(UI.profQ); keys = keys.filter(k => normTxt(nomP(k) + ' ' + deptP(k)).includes(q)); }
+  const ord = { nom: (a, b) => nomP(a).localeCompare(nomP(b), 'ca'), carrega: (a, b) => c[b].tribunals.length - c[a].tribunals.length || nomP(a).localeCompare(nomP(b), 'ca'), dept: (a, b) => dept0(a).localeCompare(dept0(b), 'ca') || nomP(a).localeCompare(nomP(b), 'ca') };
+  keys.sort(ord[UI.profOrdre]);
+  let last = null, rows = '';
+  for (const k of keys) {
+    const p = S.teachers[k];
+    if (UI.profOrdre === 'dept' && p.depts[0] !== last) { last = p.depts[0]; rows += `<tr class="grp"><td colspan="5">${chip(last)}</td></tr>`; }
+    const trs = c[k].tribunals.map(id => trib(S, id)).filter(Boolean).sort((a, b) => a.num - b.num);
+    const editDept = p.foraOrg || p.afegit;
+    rows += `<tr>
+      <td><button class="linkbtn" data-veuprof="${esc(k)}">${esc(p.nom)}</button>${p.cap.length ? ' <span class="pill ok">cap de dept.</span>' : ''}${p.foraOrg ? ' <span class="pill avis">no és a l\'organigrama</span>' : ''}</td>
+      <td>${editDept ? `<select id="pd-${esc(k)}" data-pdept="${esc(k)}" aria-label="Departament de ${esc(p.nom)}">${DEPTS.map(d => `<option ${d === p.depts[0] ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>` : esc(p.depts.join(' / '))}</td>
+      <td class="n">${c[k].tutor}</td>
+      <td>${trs.length ? trs.map(tr => `<button class="pill ${(tr.extra || []).includes(k) && !rolsTrib(S, tr)[k] ? 'info' : 'ok'} linkpill" data-vestr="${tr.id}" title="${(tr.extra || []).includes(k) && !rolsTrib(S, tr)[k] ? 'Membre afegit' : 'Hi és com a tutor/a'}">T${tr.num}</button>`).join(' ') : '<span class="tier">—</span>'}</td>
+      <td><label class="chk" title="Pot ser afegit/da a un tribunal on falti gent"><input type="checkbox" data-pool="${esc(k)}" ${p.pool ? 'checked' : ''}> disponible</label></td>
+    </tr>`;
+  }
+  m.innerHTML = `<div class="wrap">
+    <div class="toolbar">
+      <input type="search" id="pf-q" placeholder="Cerca professor/a o departament" aria-label="Cerca professorat" value="${esc(UI.profQ)}">
+      <div class="seg" role="group" aria-label="Quin professorat">${[['pool', 'Tutors i disponibles'], ['tots', 'Tot l\'organigrama']].map(([v, x]) => `<button data-pvista="${v}" aria-pressed="${UI.profVista === v}">${x}</button>`).join('')}</div>
+      <label class="chk">Ordena per <select id="pf-ord">${[['dept', 'departament'], ['carrega', 'nombre de tribunals'], ['nom', 'nom']].map(([v, x]) => `<option value="${v}" ${UI.profOrdre === v ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+    </div>
+    <div class="taula-w"><table>
+      <thead><tr><th>Professor/a</th><th>Departament</th><th class="n">Tutories</th><th>Tribunals</th><th>Per completar tribunals</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="buit-txt">Cap resultat.</td></tr>'}</tbody></table></div>
+    <div class="panell" style="margin-top:14px"><h3>Afegeix professorat</h3>
+      <p>Per a substituts o persones que no surten a l'organigrama. Queden disponibles per completar tribunals.</p>
+      <div class="row"><label class="field">Nom i cognom<input id="nou-nom" placeholder="Nom Cognom"></label>
+      <label class="field">Departament<select id="nou-dept">${DEPTS.map(d => `<option>${esc(d)}</option>`).join('')}</select></label>
+      <button class="btn pri" id="b-afegeix">Afegeix</button></div></div>
+  </div>`;
+}
+
+/* ---- Informes ---- */
+function informeFitxes(trs) {
+  return `<div class="fitxes">${trs.map(tr => {
+    const ws = treballsDe(S, tr), r = rolsTrib(S, tr);
+    return `<section class="fitxa">
+      <header style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h3>${esc(nomTr(tr))}</h3><span class="tier">${esc(defensa(tr) || 'Data per concretar')}</span></header>
+      <dl><dt>Membres</dt><dd>${membresTrib(S, tr).map(k => `${esc(nomP(k))} <span class="tier">(${esc(dept0(k))}${r[k] ? '' : ', afegit'})</span>`).join('<br>')}</dd></dl>
+      <table class="mini"><thead><tr><th>Alumne</th><th>Treball</th><th>Tutor/a</th></tr></thead><tbody>
+      ${ws.map(t => `<tr><td>${esc(alumne(t))} <span class="grup">${esc(t.grup)}</span></td><td>${esc(t.titol || 'Sense títol')}<br>${chip(t.ambit)}</td><td>${esc(t.tutors.map(nomP).join(' / '))}</td></tr>`).join('')}
+      </tbody></table></section>`;
+  }).join('')}</div>`;
+}
+function informeProfessor(keys) {
+  return keys.map(k => {
+    const trs = tribsDe(k).sort((a, b) => a.num - b.num);
+    if (!trs.length) return '';
+    const files = trs.map(tr => treballsDe(S, tr).map((t, i) => `<tr>${i === 0 ? `<td rowspan="${treballsDe(S, tr).length}"><b>${esc(nomTr(tr))}</b><br><span class="tier">${esc(defensa(tr) || 'Per concretar')}</span></td>` : ''}<td>${esc(alumne(t))}${t.tutors.includes(k) ? ' <span class="pill ok">tutor/a</span>' : ''}</td><td>${esc(t.grup)}</td><td>${esc(t.titol)}</td></tr>`).join('')).join('');
+    const nt = S.treballs.filter(t => t.estat === 'actiu' && t.tutors.includes(k)).length;
+    return `<section class="prof"><header><h3>${esc(nomP(k))}</h3><small>${esc(deptP(k))} · ${trs.length} tribunal${trs.length > 1 ? 's' : ''} · ${nt} alumne${nt === 1 ? '' : 's'} tutoritzat${nt === 1 ? '' : 's'}</small></header>
+      <div class="taula-w"><table><thead><tr><th>Tribunal</th><th>Alumne</th><th>Grup</th><th>Títol</th></tr></thead><tbody>${files}</tbody></table></div></section>`;
+  }).join('');
+}
+function informeDepts() {
+  const c = carregues(S);
+  const rows = DEPTS.map(d => {
+    const profs = Object.keys(S.teachers).filter(k => dept0(k) === d && c[k].tribunals.length);
+    const treb = S.treballs.filter(t => preparat(t) && t.ambit === d).length;
+    const places = profs.reduce((a, k) => a + c[k].tribunals.length, 0);
+    if (!profs.length && !treb) return '';
+    return `<tr><td>${chip(d)}</td><td class="n">${treb}</td><td class="n">${profs.length}</td><td class="n">${places}</td></tr>`;
+  }).join('');
+  return `<div class="taula-w"><table><thead><tr><th>Departament</th><th class="n">Treballs de l'àmbit</th><th class="n">Professorat en tribunals</th><th class="n">Places ocupades</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function informeIncidencies() {
+  const inc = incidencies(S);
+  if (!inc.length) return '<div class="panell"><p>No hi ha cap incidència.</p></div>';
+  const ord = { crit: 0, avis: 1, info: 2 }, txt = { crit: 'Cal resoldre', avis: 'Avís', info: 'Revisa' };
+  return `<div class="taula-w">${inc.sort((a, b) => ord[a.niv] - ord[b.niv]).map(i => {
+    const desti = i.tr ? `data-vestr="${i.tr}"` : i.t ? `data-vesa="${i.t}"` : '';
+    return `<div class="inc"><span class="pill ${i.niv}">${txt[i.niv]}</span>${desti ? `<button class="linkbtn" ${desti}>${esc(i.msg)}</button>` : esc(i.msg)}</div>`;
+  }).join('')}</div>`;
+}
+function profsInforme() { return UI.infProf ? [UI.infProf] : profsOrdenats(Object.keys(S.teachers).filter(k => tribsDe(k).length)); }
+
+function renderInformes(m) {
+  const vistes = [['fitxes', 'Fitxes de tribunal'], ['professor', 'Per professor/a'], ['departament', 'Per departament'], ['incidencies', 'Incidències']];
+  let filtre = '', cos = '';
+  if (UI.inf === 'professor') {
+    const ks = profsOrdenats(Object.keys(S.teachers).filter(k => tribsDe(k).length));
+    filtre = `<select id="if-prof" aria-label="Professor/a"><option value="">Tot el professorat (${ks.length})</option>${ks.map(k => `<option value="${esc(k)}" ${k === UI.infProf ? 'selected' : ''}>${esc(nomP(k))}</option>`).join('')}</select>`;
+    cos = informeProfessor(profsInforme());
+  } else if (UI.inf === 'fitxes') cos = informeFitxes(S.tribunals.filter(tr => treballsDe(S, tr).length));
+  else if (UI.inf === 'departament') cos = informeDepts();
+  else cos = informeIncidencies();
+  m.innerHTML = `<div class="wrap">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Tipus d'informe">${vistes.map(([v, x]) => `<button data-inf="${v}" aria-pressed="${UI.inf === v}">${x}</button>`).join('')}</div>
+      ${filtre}<span class="sp"></span>
+      ${downloadsCap ? `<button class="btn pri" id="b-pdf">Descarrega PDF</button><button class="btn" id="b-xlsx">Descarrega Excel</button>` : ''}
+      <button class="btn" id="b-copia">Copia per a Excel</button>
+    </div>${cos}</div>`;
+}
+
+function renderConfig(m) {
+  m.innerHTML = `<div class="wrap">
+    <div class="panell"><h2>Mida dels tribunals</h2>
+      <div class="row"><label class="field">Treballs (i tutors) per tribunal<input type="number" min="2" max="8" id="cf-mida" value="${midaT(S)}" style="width:120px"></label></div>
+      <p>Cada tribunal avalua aquest nombre de treballs i el formen els seus tutors. Si un tribunal té menys tutors diferents que places (per exemple, quan surt un tribunal de 3 treballs), s'hi afegeix professorat afí del pool. En canviar la mida, fes «Nova proposta».</p>
+    </div>
+    <div class="panell"><h2>Departaments afins</h2>
+      <p>Per a cada àmbit de treball, quins departaments es consideren afins. La proposta junta treballs d'àmbits afins perquè cada tutor avaluï treballs propers a la seva matèria.</p>
+      <div class="afi">${DEPTS.map(d => `<div>${chip(d)}</div><div class="opc">${DEPTS.filter(x => x !== d).map(x => `<button class="tog" style="--h:${hue(x)}" data-afi="${esc(d)}" data-x="${esc(x)}" aria-pressed="${(S.config.afinitats[d] || []).includes(x)}">${esc(x)}</button>`).join('')}</div>`).join('')}</div>
+      <div class="row"><button class="btn" id="cf-reset">Restableix les afinitats per defecte</button></div>
+    </div>
+    <div class="panell"><h2>Còpia de seguretat</h2>
+      <p>Desa les dades en un fitxer per guardar-les o passar-les a una altra persona, i recupera-les quan calgui.</p>
+      <div class="row">${downloadsCap ? '<button class="btn" id="cf-exp">Descarrega la còpia (.json)</button>' : ''}
+      <label class="btn" for="cf-imp">Importa una còpia…</label><input type="file" id="cf-imp" accept=".json,application/json" hidden></div>
+    </div>
+    ${MODE !== 'artifact' ? `<div class="panell"><h2>Connexió amb el Google Sheets</h2><p>Aquest navegador té desada la clau d'accés al full.</p><div class="row"><button class="btn" id="cx-desconnecta">Desconnecta aquest navegador</button></div></div>` : ''}
+  </div>`;
+}
+
+/* ---- Exportacions ---- */
+function filesAlumnes() {
+  const out = [];
+  for (const tr of S.tribunals) for (const t of treballsDe(S, tr)) out.push({
+    Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula, Alumne: alumne(t), Grup: t.grup, 'Títol': t.titol, 'Àmbit': t.ambit,
+    'Tutor/a': t.tutors.map(nomP).join(' / '), 'Altres membres del tribunal': membresTrib(S, tr).filter(k => !t.tutors.includes(k)).map(nomP).join(', ')
+  });
+  return out;
+}
+function filesTribunals() {
+  return S.tribunals.filter(tr => treballsDe(S, tr).length).map(tr => {
+    const mem = membresTrib(S, tr), r = { Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula };
+    for (let i = 0; i < Math.max(midaT(S), mem.length); i++) r['Membre ' + (i + 1)] = mem[i] ? `${nomP(mem[i])} (${dept0(mem[i])})` : '';
+    treballsDe(S, tr).forEach((t, i) => { r['Alumne ' + (i + 1)] = `${alumne(t)} (${t.grup})`; });
+    return r;
+  });
+}
+function filesProfessor() {
+  const out = [];
+  for (const k of profsOrdenats(Object.keys(S.teachers))) for (const tr of tribsDe(k).sort((a, b) => a.num - b.num)) {
+    const meus = treballsDe(S, tr).filter(t => t.tutors.includes(k));
+    out.push({ 'Professor/a': nomP(k), Departament: deptP(k), Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula, 'Els seus alumnes': meus.map(alumne).join('; ') || '(membre afegit)', 'Treballs que avalua': treballsDe(S, tr).length });
+  }
+  return out;
+}
+function tsv(rows) {
+  if (!rows.length) return '';
+  const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  return [cols.join('\t'), ...rows.map(r => cols.map(c => String(r[c] == null ? '' : r[c]).replace(/[\t\n]/g, ' ')).join('\t'))].join('\n');
+}
+function ampleCols(rows) {
+  const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  return cols.map(c => ({ wch: Math.min(60, Math.max(c.length, ...rows.map(r => String(r[c] == null ? '' : r[c]).length)) + 2) }));
+}
+async function exportaXlsx() {
+  if (typeof XLSX === 'undefined') { toast('No s\'ha pogut carregar el generador d\'Excel. Fes servir «Copia per a Excel».'); return; }
+  const wb = XLSX.utils.book_new();
+  const fulls = [['Tribunals', filesTribunals()], ['Alumnes', filesAlumnes()], ['Professorat', filesProfessor()], ['Incidències', incidencies(S).map(i => ({ Nivell: i.niv, 'Incidència': i.msg }))]];
+  for (const [nom, rows] of fulls) {
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ '': '' }]);
+    if (rows.length) ws['!cols'] = ampleCols(rows);
+    XLSX.utils.book_append_sheet(wb, ws, nom);
+  }
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  await descarrega('tribunals-treball-recerca.xlsx', new Blob([buf]));
+}
+async function exportaHtml() {
+  let cos, titol;
+  if (UI.inf === 'professor') { titol = 'Tribunals per professor/a'; cos = informeProfessor(profsInforme()); }
+  else if (UI.inf === 'departament') { titol = 'Resum per departament'; cos = informeDepts(); }
+  else if (UI.inf === 'incidencies') { titol = 'Incidències'; cos = informeIncidencies(); }
+  else { titol = 'Tribunals del Treball de Recerca'; cos = informeFitxes(S.tribunals.filter(tr => treballsDe(S, tr).length)); }
+  const css = APP_CSS + `\n@media print { .prof, .fitxa { break-inside: avoid; } body { background: #fff; } .taula-w { overflow: visible; } th { position: static; } .fitxes { grid-template-columns: 1fr 1fr; } }\n body{padding:20px} .linkbtn{pointer-events:none}`;
+  const doc = `<!DOCTYPE html><html lang="ca" data-theme="light"><head><meta charset="utf-8"><title>${esc(titol)}</title><style>${css}</style></head><body><h1>${esc(titol)}</h1><p class="estat-desa">Treball de Recerca · ${esc(S.curs || 'Curs 2026-2027')} · generat el ${new Date().toLocaleDateString('ca-ES')}</p>${cos}</body></html>`;
+  await descarrega(normTxt(titol).replace(/[^a-z0-9]+/g, '-') + '.html', doc);
+}
+async function copia() {
+  let rows;
+  if (UI.inf === 'professor') rows = filesProfessor().filter(r => !UI.infProf || r['Professor/a'] === nomP(UI.infProf));
+  else if (UI.inf === 'departament') rows = filesTribunals();
+  else if (UI.inf === 'incidencies') rows = incidencies(S).map(i => ({ Nivell: i.niv, 'Incidència': i.msg }));
+  else rows = filesAlumnes();
+  try { await navigator.clipboard.writeText(tsv(rows)); toast('Copiat. Enganxa-ho en un full de càlcul.'); }
+  catch (e) { toast('El navegador no ha deixat copiar.'); }
+}
+
+/* ---- Esdeveniments ---- */
+function vesA(sel) {
+  UI.q = ''; UI.ambit = ''; UI.nomesInc = false; UI.goto = sel;
+  if (location.hash === '#tribunals') ruta(); else location.hash = 'tribunals';
+}
+function nouTribunal() {
+  const num = Math.max(0, ...S.tribunals.map(t => t.num)) + 1;
+  const tr = { id: 'T' + Date.now().toString(36), num, extra: [], data: '', hora: '', aula: '', bloq: false };
+  S.tribunals.push(tr); return tr;
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'b-desa') return desa();
+  if (b.id === 'b-undo') return desfes();
+  if (b.id === 'b-tanca-prop') { UI.proposta = false; return renderCap(); }
+  if (b.id === 'b-recupera') { const d = UI.esborrany; UI.esborrany = null; muta(() => { S = d.estat; normalitza(); }); return toast('Canvis recuperats. Recorda desar.'); }
+  if (b.id === 'b-descarta') { UI.esborrany = null; esborraEsborrany(); return renderCap(); }
+  if (b.dataset.lock) { const tr = trib(S, b.dataset.lock); return muta(() => { tr.bloq = !tr.bloq; }); }
+  if (b.dataset.treu) { const tr = trib(S, b.dataset.treu), k = b.dataset.k; return muta(() => { tr.extra = tr.extra.filter(x => x !== k); }); }
+  if (b.dataset.esborra) { const id = b.dataset.esborra; return muta(() => { S.tribunals = S.tribunals.filter(t => t.id !== id); }); }
+  if (b.dataset.edita) return editaTreball(b.dataset.edita);
+  if (b.dataset.reactiva) { const t = S.treballs.find(x => x.id === b.dataset.reactiva); return muta(() => { t.estat = 'actiu'; }); }
+  if (b.id === 'b-nou') { let tr; muta(() => { tr = nouTribunal(); }); return vesA('tr-' + tr.id); }
+  if (b.id === 'b-refes') {
+    const nb = S.tribunals.filter(t => t.bloq).length;
+    const ok = await dialeg('Nova proposta', `Es tornaran a agrupar tots els treballs dels tribunals no bloquejats${nb ? ` (${nb} bloquejats es mantenen)` : ''}. Ho pots desfer amb «Desfés».`, [{ txt: 'Cancel·la', v: false }, { txt: 'Calcula', v: true, pri: true }]);
+    if (ok) { muta(() => proposa(S, { seed: Date.now() })); toast('Nova proposta calculada.'); }
+    return;
+  }
+  if (b.dataset.pvista) { UI.profVista = b.dataset.pvista; return render(); }
+  if (b.dataset.veuprof) { UI.inf = 'professor'; UI.infProf = b.dataset.veuprof; if (location.hash === '#informes') ruta(); else location.hash = 'informes'; return; }
+  if (b.dataset.vesa) { const t = S.treballs.find(x => x.id === b.dataset.vesa); return vesA(t && t.tribunal ? 'tr-' + t.tribunal : 'f-' + b.dataset.vesa); }
+  if (b.dataset.vestr) return vesA('tr-' + b.dataset.vestr);
+  if (b.dataset.inf) { UI.inf = b.dataset.inf; return render(); }
+  if (b.id === 'b-xlsx') return exportaXlsx();
+  if (b.id === 'b-html') return exportaHtml();
+  if (b.id === 'b-copia') return copia();
+  if (b.id === 'b-afegeix') {
+    const nom = $('#nou-nom').value.trim(), d = $('#nou-dept').value;
+    if (!nom) { toast('Escriu el nom.'); return; }
+    const key = 'nou-' + normTxt(nom).replace(/[^a-z0-9]+/g, '-');
+    if (S.teachers[key]) { toast('Ja existeix.'); return; }
+    muta(() => { S.teachers[key] = { nom, depts: [d], cap: [], pool: true, afegit: true }; });
+    return toast(nom + ' afegit.');
+  }
+  if (b.dataset.afi) { const d = b.dataset.afi, x = b.dataset.x; return muta(() => { const a = S.config.afinitats[d] = S.config.afinitats[d] || []; const i = a.indexOf(x); i >= 0 ? a.splice(i, 1) : a.push(x); }); }
+  if (b.id === 'cf-reset') return muta(() => { S.config.afinitats = JSON.parse(JSON.stringify(AFINITATS_DEFECTE)); });
+  if (b.id === 'cf-exp') return descarrega('tribunals-trec-copia.json', JSON.stringify(S, null, 1));
+});
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.mou) {
+    const t = S.treballs.find(x => x.id === el.dataset.mou), desti = el.value || null;
+    muta(() => {
+      const origen = t.tribunal && trib(S, t.tribunal);
+      t.tribunal = desti;
+      if (desti) trib(S, desti).bloq = true;
+      if (origen) origen.bloq = true;
+    });
+    toast(desti ? `Mogut al ${nomTr(trib(S, desti))}. Els dos tribunals queden bloquejats.` : 'Tret del tribunal.');
+    return;
+  }
+  if (el.dataset.afegeix && el.value) { const tr = trib(S, el.dataset.afegeix), k = el.value; return muta(() => { tr.extra = [...(tr.extra || []), k]; }); }
+  if (el.dataset.camp) { const tr = trib(S, el.dataset.tr); muta(() => { tr[el.dataset.camp] = el.value; }, { noRender: true }); renderCap(); return; }
+  if (el.dataset.pool) { const k = el.dataset.pool; return muta(() => { S.teachers[k].pool = el.checked; }); }
+  if (el.dataset.pdept) { const k = el.dataset.pdept; return muta(() => { S.teachers[k].depts = [el.value]; }); }
+  if (el.id === 'tb-ambit') { UI.ambit = el.value; return renderLlista(); }
+  if (el.id === 'tb-inc') { UI.nomesInc = el.checked; return renderLlista(); }
+  if (el.id === 'pf-ord') { UI.profOrdre = el.value; return render(); }
+  if (el.id === 'if-prof') { UI.infProf = el.value; return render(); }
+  if (el.id === 'cf-mida') { const v = parseInt(el.value, 10); if (v >= 2 && v <= 8) muta(() => { S.config.midaTribunal = v; }); return; }
+  if (el.id === 'cf-imp' && el.files[0]) {
+    el.files[0].text().then(txt => {
+      try { const d = JSON.parse(txt); if (!d.treballs || !d.teachers) throw 0; muta(() => { S = d; normalitza(); }); toast('Còpia importada. Recorda desar.'); }
+      catch (x) { toast('Aquest fitxer no és una còpia d\'aquesta eina.'); }
+    });
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'tb-q') { UI.q = e.target.value; renderLlista(); }
+  if (e.target.id === 'pf-q') { UI.profQ = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#pf-q'); n.focus(); n.setSelectionRange(pos, pos); }
+});
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.target.matches('input, select, textarea')) { e.preventDefault(); desfes(); } });
+
+function ruta() {
+  const h = (location.hash || '').slice(1);
+  UI.tab = ['tribunals', 'professorat', 'informes', 'correus', 'configuracio'].includes(h) ? h : 'tribunals';
+  $('#main').innerHTML = ''; render();
+  if (UI.goto) {
+    const el = document.getElementById(UI.goto); UI.goto = null;
+    if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }
+  }
+}
+window.addEventListener('hashchange', ruta);
+
+/* ===== PDF ===== */
+const VERD = [23, 105, 90];
+function pdfTxt(s) {
+  return String(s == null ? '' : s).replace(/ \u00B7 /g, '  |  ').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '');
+}
+function pdfDisponible() { return !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable); }
+function nouPdf(titol) {
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  doc.setProperties({ title: pdfTxt(titol) });
+  return doc;
+}
+function capPdf(doc, titol, sub) {
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(28, 39, 51);
+  doc.text(pdfTxt(titol), 15, 18);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(93, 104, 116);
+  doc.text(pdfTxt(sub), 15, 24);
+  doc.setDrawColor(...VERD); doc.setLineWidth(0.6); doc.line(15, 27, 195, 27);
+  doc.setTextColor(28, 39, 51);
+  return 34;
+}
+function peuPdf(doc) {
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(pdfTxt(`Treball de Recerca · ${S.curs || 'Curs 2026-2027'}`), 15, 289);
+    doc.text(`${i} / ${n}`, 195, 289, { align: 'right' });
+  }
+}
+const TAULA = { theme: 'grid', styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.8, lineColor: [217, 221, 216], textColor: [28, 39, 51], valign: 'top' }, headStyles: { fillColor: VERD, textColor: 255, fontStyle: 'bold' }, margin: { left: 15, right: 15 } };
+function blocTribunalPdf(doc, tr, y, kDestacat) {
+  const ws = treballsDe(S, tr), r = rolsTrib(S, tr);
+  if (y > 225) { doc.addPage(); y = 20; }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.text(pdfTxt(nomTr(tr)), 15, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(93, 104, 116);
+  doc.text(pdfTxt('Defensa: ' + (defensa(tr) || 'per concretar')), 195, y, { align: 'right' }); doc.setTextColor(28, 39, 51);
+  doc.autoTable({ ...TAULA, startY: y + 3, head: [['Membre del tribunal', 'Departament', 'Rol']],
+    body: membresTrib(S, tr).map(k => [pdfTxt(nomP(k)) + (k === kDestacat ? '  (tu)' : ''), pdfTxt(dept0(k)), pdfTxt(r[k] ? 'Tutor/a de ' + r[k].map(alumne).join('; ') : 'Membre afegit')]),
+    columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 35 } },
+    didParseCell: d => { if (d.section === 'body' && kDestacat && membresTrib(S, tr)[d.row.index] === kDestacat) d.cell.styles.fontStyle = 'bold'; } });
+  doc.autoTable({ ...TAULA, startY: doc.lastAutoTable.finalY + 2, head: [['Alumne', 'Grup', 'Títol del treball', 'Àmbit', 'Tutor/a']],
+    body: ws.map(t => [pdfTxt(alumne(t)), pdfTxt(t.grup), pdfTxt(t.titol || 'Sense títol'), pdfTxt(t.ambit), pdfTxt(t.tutors.map(nomP).join(' / '))]),
+    columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 11 }, 3: { cellWidth: 25 }, 4: { cellWidth: 32 } },
+    didParseCell: d => { if (d.section === 'body' && kDestacat && ws[d.row.index] && ws[d.row.index].tutors.includes(kDestacat)) d.cell.styles.fillColor = [220, 236, 231]; } });
+  return doc.lastAutoTable.finalY + 10;
+}
+function pdfTribunals() {
+  const doc = nouPdf('Tribunals del Treball de Recerca');
+  let y = capPdf(doc, 'Tribunals del Treball de Recerca', `${S.curs || 'Curs 2026-2027'} · ${S.tribunals.length} tribunals · generat el ${new Date().toLocaleDateString('ca-ES')}`);
+  for (const tr of S.tribunals.filter(x => treballsDe(S, x).length)) y = blocTribunalPdf(doc, tr, y);
+  peuPdf(doc); return doc;
+}
+function pdfProfessors(keys) {
+  const doc = nouPdf('Tribunals per professor/a');
+  keys.forEach((k, i) => {
+    if (i) doc.addPage();
+    const trs = tribsDe(k).sort((a, b) => a.num - b.num);
+    let y = capPdf(doc, nomP(k), `${deptP(k)} · Treball de Recerca ${S.curs || ''} · ${trs.length} tribunal${trs.length > 1 ? 's' : ''}`);
+    doc.setFontSize(9.5);
+    doc.text(doc.splitTextToSize(pdfTxt('Els treballs que tutoritzes surten ressaltats. Al tribunal hi ets per avaluar tots els treballs que s\'hi presenten.'), 180), 15, y); y += 9;
+    for (const tr of trs) y = blocTribunalPdf(doc, tr, y, k);
+  });
+  peuPdf(doc); return doc;
+}
+function pdfTaula(titol, head, body) {
+  const doc = nouPdf(titol);
+  const y = capPdf(doc, titol, `Treball de Recerca · ${S.curs || 'Curs 2026-2027'} · generat el ${new Date().toLocaleDateString('ca-ES')}`);
+  doc.autoTable({ ...TAULA, startY: y, head: [head], body: body.map(r => r.map(pdfTxt)) });
+  peuPdf(doc); return doc;
+}
+async function exportaPdf() {
+  if (!pdfDisponible()) { toast('No s\'ha pogut carregar el generador de PDF. Recarrega la pàgina.'); return; }
+  let doc, nom;
+  if (UI.inf === 'professor') { doc = pdfProfessors(profsInforme()); nom = UI.infProf ? 'tribunal-' + normTxt(nomP(UI.infProf)).replace(/[^a-z0-9]+/g, '-') : 'tribunals-per-professor'; }
+  else if (UI.inf === 'departament') {
+    const c = carregues(S);
+    doc = pdfTaula('Resum per departament', ['Departament', 'Treballs de l\'àmbit', 'Professorat en tribunals', 'Places ocupades'],
+      DEPTS.map(d => { const ps = Object.keys(S.teachers).filter(k => dept0(k) === d && c[k].tribunals.length); const tb = S.treballs.filter(t => preparat(t) && t.ambit === d).length; return (ps.length || tb) ? [d, String(tb), String(ps.length), String(ps.reduce((a, k) => a + c[k].tribunals.length, 0))] : null; }).filter(Boolean));
+    nom = 'tribunals-per-departament';
+  } else if (UI.inf === 'incidencies') { doc = pdfTaula('Incidències', ['Nivell', 'Incidència'], incidencies(S).map(i => [{ crit: 'Cal resoldre', avis: 'Avís', info: 'Revisa' }[i.niv], i.msg])); nom = 'tribunals-incidencies'; }
+  else { doc = pdfTribunals(); nom = 'tribunals-treball-recerca'; }
+  await descarrega(nom + '.pdf', doc.output('blob'));
+}
+
+/* ===== Correus ===== */
+const CORREU_DEFECTE = {
+  assumpte: 'Tribunal del Treball de Recerca: {tribunals}',
+  intro: 'Et fem arribar el tribunal del Treball de Recerca que t\'ha estat assignat. Hi trobaràs la resta de membres i els alumnes que hi presenten el treball, amb el títol de cadascun.',
+  tancament: 'Si detectes cap error o tens alguna incompatibilitat, digue-m\'ho tan aviat com puguis.\n\nGràcies,',
+  cc: '', signatura: true, adjunta: true, patro: ''
+};
+const RE_MAIL = /^[^\s@,;<>]+@[^\s@,;<>]+\.[a-z]{2,}$/i;
+let mcpCap = null, enviant = false;
+const SEL = new Set();
+
+function nomPila(k) { return (nomP(k).split(' ')[0]) || nomP(k); }
+function empremta(k) {
+  return JSON.stringify(tribsDe(k).sort((a, b) => a.num - b.num).map(tr => [tr.num, tr.data, tr.hora, tr.aula, membresTrib(S, tr), treballsDe(S, tr).map(t => t.id + t.titol)]));
+}
+function destinataris() { return profsOrdenats(Object.keys(S.teachers).filter(k => tribsDe(k).length)); }
+function substitueix(txt, k) {
+  const trs = tribsDe(k).sort((a, b) => a.num - b.num);
+  return String(txt || '').replace(/\{nom\}/g, nomPila(k)).replace(/\{tribunals\}/g, trs.map(nomTr).join(' i '));
+}
+function correuDe(k) {
+  const C = S.correu, trs = tribsDe(k).sort((a, b) => a.num - b.num), r0 = s => esc(s).replace(/\n/g, '<br>');
+  const td = 'style="border:1px solid #d9ddd8;padding:6px 8px;text-align:left;vertical-align:top"';
+  const th = 'style="border:1px solid #d9ddd8;padding:6px 8px;text-align:left;background:#17695a;color:#fff"';
+  let html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1c2733;line-height:1.45">`;
+  html += `<p>Hola ${esc(nomPila(k))},</p><p>${r0(substitueix(C.intro, k))}</p>`;
+  let txt = `Hola ${nomPila(k)},\n\n${substitueix(C.intro, k)}\n`;
+  for (const tr of trs) {
+    const r = rolsTrib(S, tr), ws = treballsDe(S, tr);
+    html += `<h3 style="margin:18px 0 6px;font-size:16px">${esc(nomTr(tr))}</h3>`;
+    html += `<p style="margin:0 0 6px"><b>Defensa:</b> ${esc(defensa(tr) || 'data per concretar')}</p>`;
+    html += `<p style="margin:0 0 8px"><b>Membres:</b> ${membresTrib(S, tr).map(m => esc(nomP(m)) + ` (${esc(dept0(m))})`).join(', ')}</p>`;
+    html += `<table style="border-collapse:collapse;font-size:13px"><tr><th ${th}>Alumne</th><th ${th}>Grup</th><th ${th}>Títol del treball</th><th ${th}>Tutor/a</th></tr>`;
+    html += ws.map(t => `<tr${t.tutors.includes(k) ? ' style="background:#dcece7"' : ''}><td ${td}>${esc(alumne(t))}</td><td ${td}>${esc(t.grup)}</td><td ${td}>${esc(t.titol || 'Sense títol')}</td><td ${td}>${esc(t.tutors.map(nomP).join(' / '))}${t.tutors.includes(k) ? ' <b>(tu)</b>' : ''}</td></tr>`).join('');
+    html += `</table>`;
+    txt += `\n${nomTr(tr).toUpperCase()}\nDefensa: ${defensa(tr) || 'data per concretar'}\nMembres: ${membresTrib(S, tr).map(nomP).join(', ')}\n` + ws.map(t => `- ${alumne(t)} (${t.grup}): ${t.titol || 'Sense títol'}. Tutor/a: ${t.tutors.map(nomP).join(' / ')}${t.tutors.includes(k) ? ' (tu)' : ''}`).join('\n') + '\n';
+    if (r[k] === undefined) txt += '(Hi ets com a membre afegit.)\n';
+  }
+  html += `<p style="margin-top:18px">${r0(substitueix(C.tancament, k))}</p></div>`;
+  txt += `\n${substitueix(C.tancament, k)}`;
+  return { assumpte: substitueix(C.assumpte, k), html, txt };
+}
+function generaPatro(patro, k) {
+  const toks = normTxt(nomP(k)).replace(/[^a-z ]/g, ' ').split(/\s+/).filter(Boolean);
+  const m = { '{nom}': toks[0] || '', '{inicial}': (toks[0] || '').slice(0, 1), '{cognom}': toks[1] || '', '{cognom2}': toks[2] || '', '{inicialcognom}': (toks[1] || '').slice(0, 1) };
+  return patro.replace(/\{nom\}|\{inicial\}|\{cognom2\}|\{cognom\}|\{inicialcognom\}/g, x => m[x]);
+}
+function estatEnviament(k) {
+  const e = (S.enviaments || {})[k];
+  if (!e) return '<span class="pill info">Pendent</span>';
+  const quan = new Date(e.quan).toLocaleString('ca-ES', { dateStyle: 'short', timeStyle: 'short' });
+  const canviat = e.empremta !== empremta(k);
+  return `<span class="pill ${e.tipus === 'enviat' ? 'ok' : 'info'}">${e.tipus === 'enviat' ? 'Enviat' : 'Esborrany creat'} ${esc(quan)}</span>${canviat ? ' <span class="pill avis">el tribunal ha canviat</span>' : ''}`;
+}
+
+function renderCorreus(m) {
+  const C = S.correu, ds = destinataris();
+  const ambMail = ds.filter(k => RE_MAIL.test(S.teachers[k].email || ''));
+  if (!UI.selInit) { ds.forEach(k => SEL.add(k)); UI.selInit = true; }
+  const sel = ds.filter(k => SEL.has(k));
+  const selOk = sel.filter(k => RE_MAIL.test(S.teachers[k].email || ''));
+  const prev = UI.prevProf && ds.includes(UI.prevProf) ? UI.prevProf : ds[0];
+  const c = prev ? correuDe(prev) : null;
+  const avisMcp = mcpCap ? (MODE !== 'artifact' && UI.compte ? `<div class="banner"><span>Els correus surten del compte <b>${esc(UI.compte)}</b>${UI.quota != null ? ` · avui en pots enviar ${UI.quota} més` : ''}.</span></div>` : '') : `<div class="banner warn"><span>L'enviament amb Gmail funciona quan obres l'eina a claude.ai amb el connector de Gmail actiu. Mentrestant pots copiar el text de cada correu.</span></div>`;
+  m.innerHTML = `<div class="wrap">${avisMcp}
+    <div class="panell"><h2>Missatge</h2>
+      <p>Cada professor/a rep un correu amb els seus tribunals, la resta de membres i, per a cada alumne, el títol del treball. {nom} es canvia pel nom de pila i {tribunals} pels tribunals assignats.</p>
+      <label class="field">Assumpte<input id="cr-assumpte" value="${esc(C.assumpte)}"></label>
+      <label class="field">Introducció<textarea id="cr-intro" rows="3">${esc(C.intro)}</textarea></label>
+      <label class="field">Tancament<textarea id="cr-tancament" rows="3">${esc(C.tancament)}</textarea></label>
+      <div class="row">
+        <label class="field" style="flex:1 1 260px">Còpia (CC) a cada correu, opcional<input id="cr-cc" value="${esc(C.cc)}" placeholder="coordinacio@…"></label>
+        ${MODE === 'artifact' ? `<label class="chk"><input type="checkbox" id="cr-sig" ${C.signatura ? 'checked' : ''}> Afegeix la meva signatura de Gmail</label>` : ''}
+        <label class="chk"><input type="checkbox" id="cr-adj" ${C.adjunta ? 'checked' : ''}> Adjunta el seu PDF</label>
+      </div>
+    </div>
+    <div class="panell"><h2>Adreces del professorat</h2>
+      <p>${ambMail.length} de ${ds.length} persones amb tribunal tenen correu. Pots escriure'ls a la taula, enganxar una llista o omplir els buits amb el patró del centre.</p>
+      <div class="row">
+        <label class="field" style="flex:1 1 280px">Patró d'adreça<input id="cr-patro" value="${esc(C.patro)}" placeholder="{inicial}{cognom}@elcentre.cat"></label>
+        <button class="btn" id="cr-aplica">Omple els buits amb el patró</button>
+      </div>
+      <p class="tier">Peces disponibles: {nom}, {inicial}, {cognom}, {cognom2}, {inicialcognom}. ${C.patro && ds[0] ? 'Exemple: ' + esc(nomP(ds[0])) + ' → ' + esc(generaPatro(C.patro, ds[0])) : ''}</p>
+      <details><summary>Enganxa una llista de correus</summary>
+        <div class="row" style="margin-top:8px"><label class="field" style="flex:1 1 100%">Una persona per línia, amb el nom i el correu (p. ex. copiat d'un full de càlcul)<textarea id="cr-llista" rows="5" placeholder="Rafael Mateo	rmateo@elcentre.cat"></textarea></label>
+        <button class="btn" id="cr-importa">Assigna els correus</button></div>
+      </details>
+    </div>
+    <div class="toolbar">
+      <label class="chk"><input type="checkbox" id="cr-tots" ${sel.length === ds.length ? 'checked' : ''}> Selecciona'ls tots</label>
+      <span class="estat-desa">${sel.length} seleccionats · ${selOk.length} amb correu vàlid</span>
+      <span class="sp"></span>
+      <span class="estat-desa" id="cr-progres" role="status"></span>
+      <button class="btn" id="cr-esborranys" ${mcpCap && selOk.length && !enviant ? '' : 'disabled'}>Crea esborranys a Gmail (${selOk.length})</button>
+      <button class="btn pri" id="cr-envia" ${mcpCap && selOk.length && !enviant ? '' : 'disabled'}>Envia ara (${selOk.length})</button>
+    </div>
+    <div class="correus-g">
+      <div class="taula-w"><table>
+        <thead><tr><th></th><th>Professor/a</th><th>Correu</th><th>Tribunals</th><th>Estat</th></tr></thead>
+        <tbody>${ds.map(k => {
+          const em = S.teachers[k].email || '', ok = RE_MAIL.test(em);
+          return `<tr class="${k === prev ? 'sel' : ''}"><td><input type="checkbox" data-crsel="${esc(k)}" ${SEL.has(k) ? 'checked' : ''} aria-label="Selecciona ${esc(nomP(k))}"></td>
+            <td><button class="linkbtn" data-prev="${esc(k)}">${esc(nomP(k))}</button><div class="tier">${esc(dept0(k))}</div></td>
+            <td><input class="mail ${em && !ok ? 'mal' : ''}" id="em-${esc(k)}" data-email="${esc(k)}" value="${esc(em)}" placeholder="correu@…" type="email" aria-label="Correu de ${esc(nomP(k))}"></td>
+            <td>${tribsDe(k).sort((a, b) => a.num - b.num).map(tr => 'T' + tr.num).join(', ')}</td>
+            <td>${estatEnviament(k)}</td></tr>`;
+        }).join('')}</tbody></table></div>
+      <div class="panell previ">${c ? `<div class="row" style="justify-content:space-between"><h3>Previsualització: ${esc(nomP(prev))}</h3><button class="btn sm" id="cr-copia" data-k="${esc(prev)}">Copia el text</button></div>
+        <div class="tier"><b>Per a:</b> ${esc(S.teachers[prev].email || '(sense correu)')}${C.cc ? ' · <b>CC:</b> ' + esc(C.cc) : ''}${C.adjunta ? ' · <b>Adjunt:</b> PDF del seu tribunal' : ''}</div>
+        <div class="tier"><b>Assumpte:</b> ${esc(c.assumpte)}</div>
+        <div class="mostra">${c.html}</div>` : '<p>No hi ha cap professor/a amb tribunal.</p>'}</div>
+    </div>
+  </div>`;
+}
+
+function errorGmail(e) {
+  const c = e && e.code;
+  if (c === 'server_not_connected' || c === 'selection_required') return { atura: true, msg: 'Gmail no està connectat. Afegeix-lo a claude.ai › Configuració › Connectors i torna-ho a provar.' };
+  if (c === 'needs_reauth') return { atura: true, msg: 'Cal tornar a connectar Gmail a claude.ai › Configuració › Connectors.' };
+  if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') return { atura: true, msg: 'Cal que permetis que aquesta eina faci servir Gmail. Torna-ho a provar i accepta el permís.' };
+  if (c === 'blocked_by_policy') return { atura: true, msg: 'La teva organització no permet enviar correus des d\'aquí.' };
+  if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') return { atura: true, msg: 'Aquesta vista no pot fer servir Gmail. Obre l\'eina a claude.ai.' };
+  if (c === 'server_unavailable' || c === 'upstream_error' || c === 'cancelled') return { atura: true, dubte: true, msg: 'Gmail no ha respost. Comprova a Gmail si el correu ha sortit abans de tornar-lo a enviar.' };
+  return { atura: false, msg: (e && e.message) || 'Error desconegut' };
+}
+
+async function enviaCorreus(tipus) {
+  if (!mcpCap || enviant) return;
+  const ks = destinataris().filter(k => SEL.has(k) && RE_MAIL.test(S.teachers[k].email || ''));
+  if (!ks.length) return;
+  const ja = ks.filter(k => S.enviaments[k] && S.enviaments[k].tipus === 'enviat' && S.enviaments[k].empremta === empremta(k)).length;
+  const ok = await dialeg(tipus === 'enviat' ? 'Enviar els correus' : 'Crear esborranys',
+    (tipus === 'enviat' ? `S'enviaran ${ks.length} correus des del teu Gmail, un per professor/a.` : `Es crearan ${ks.length} esborranys a la teva safata de Gmail perquè els revisis i els enviïs tu.`) + (ja ? ` ${ja} d'aquestes persones ja havien rebut aquest mateix tribunal.` : ''),
+    [{ txt: 'Cancel·la', v: false }, { txt: tipus === 'enviat' ? 'Envia\'ls' : 'Crea els esborranys', v: true, pri: true }]);
+  if (!ok) return;
+  if (S.correu.adjunta && !pdfDisponible()) { toast('No s\'ha carregat el generador de PDF: desmarca «Adjunta el seu PDF» o recarrega la pàgina.'); return; }
+  enviant = true; render();
+  const C = S.correu, cc = C.cc.split(/[,;\s]+/).filter(x => RE_MAIL.test(x));
+  let fets = 0, errors = [];
+  for (const k of ks) {
+    const p = $('#cr-progres'); if (p) p.textContent = `${tipus === 'enviat' ? 'Enviant' : 'Creant'} ${fets + 1} de ${ks.length}…`;
+    const c = correuDe(k);
+    const input = { to: [S.teachers[k].email.trim()], subject: c.assumpte, htmlBody: c.html, body: c.txt, includeSignature: !!C.signatura };
+    if (cc.length) input.cc = cc;
+    if (C.adjunta) {
+      const b64 = pdfProfessors([k]).output('datauristring').split(',')[1];
+      input.attachments = [{ content: b64, filename: 'tribunal-trec-' + normTxt(nomP(k)).replace(/[^a-z0-9]+/g, '-') + '.pdf', mimeType: 'application/pdf' }];
+    }
+    try {
+      await mcpCap.callTool('Gmail', tipus === 'enviat' ? 'send_message' : 'create_draft', input);
+      S.enviaments[k] = { tipus, quan: new Date().toISOString(), empremta: empremta(k) };
+      fets++; UI.dirty = true; desaEsborrany();
+    } catch (e) {
+      const er = errorGmail(e);
+      errors.push(nomP(k) + ': ' + er.msg);
+      if (er.atura) { toast(er.msg); break; }
+    }
+  }
+  enviant = false; render();
+  if (fets) toast(`${fets} ${tipus === 'enviat' ? 'correus enviats' : 'esborranys creats'}${errors.length ? `; ${errors.length} amb error` : ''}. Desa per guardar-ne l'estat.`);
+  else if (errors.length && !errorGmail({}).atura) toast(errors[0]);
+}
+
+function importaLlista(txt) {
+  const ds = Object.keys(S.teachers);
+  let ok = 0, no = [];
+  for (const linia of txt.split(/\r?\n/)) {
+    const m = linia.match(/[^\s@,;<>"']+@[^\s@,;<>"']+\.[a-z]{2,}/i);
+    if (!m) continue;
+    const nom = normTxt(linia.replace(m[0], ' ')).replace(/[^a-z ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+    if (!nom.length) { no.push(m[0]); continue; }
+    let best = null, bs = 0;
+    for (const k of ds) {
+      const tk = normTxt(nomP(k)).replace(/[^a-z ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+      const comuns = nom.filter(w => tk.includes(w)).length;
+      const s = comuns / Math.max(2, Math.min(tk.length, nom.length));
+      if (comuns >= 2 || (comuns === 1 && tk.length === 1)) { if (s > bs) { bs = s; best = k; } }
+    }
+    if (best) { S.teachers[best].email = m[0]; ok++; } else no.push(linia.trim());
+  }
+  return { ok, no };
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'b-pdf') return exportaPdf();
+  if (b.dataset.prev) { UI.prevProf = b.dataset.prev; return render(); }
+  if (b.id === 'cr-esborranys') return enviaCorreus('esborrany');
+  if (b.id === 'cr-envia') return enviaCorreus('enviat');
+  if (b.id === 'cr-copia') {
+    const c = correuDe(b.dataset.k);
+    try { await navigator.clipboard.writeText(`Assumpte: ${c.assumpte}\n\n${c.txt}`); toast('Text copiat.'); } catch (x) { toast('El navegador no ha deixat copiar.'); }
+    return;
+  }
+  if (b.id === 'cr-aplica') {
+    const p = S.correu.patro;
+    if (!p || !p.includes('@')) { toast('Escriu primer un patró amb @, per exemple {inicial}{cognom}@elcentre.cat'); return; }
+    let n = 0;
+    muta(() => { for (const k of destinataris()) if (!S.teachers[k].email) { S.teachers[k].email = generaPatro(p, k); n++; } });
+    return toast(`${n} adreces generades. Revisa les que tinguin cognoms compostos.`);
+  }
+  if (b.id === 'cr-importa') {
+    let res;
+    muta(() => { res = importaLlista($('#cr-llista').value); });
+    return toast(`${res.ok} correus assignats${res.no.length ? `; ${res.no.length} línies sense coincidència` : ''}.`);
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.email !== undefined && el.dataset.email) { const k = el.dataset.email; return muta(() => { S.teachers[k].email = el.value.trim(); }); }
+  if (el.dataset.crsel) { el.checked ? SEL.add(el.dataset.crsel) : SEL.delete(el.dataset.crsel); return render(); }
+  if (el.id === 'cr-tots') { destinataris().forEach(k => el.checked ? SEL.add(k) : SEL.delete(k)); return render(); }
+  const camps = { 'cr-assumpte': 'assumpte', 'cr-intro': 'intro', 'cr-tancament': 'tancament', 'cr-cc': 'cc', 'cr-patro': 'patro' };
+  if (camps[el.id]) return muta(() => { S.correu[camps[el.id]] = el.value; });
+  if (el.id === 'cr-sig') return muta(() => { S.correu.signatura = el.checked; });
+  if (el.id === 'cr-adj') return muta(() => { S.correu.adjunta = el.checked; });
+});
+
+
+/* ===== Mode Google Sheets: Apps Script (google.script.run) o GitHub Pages (fetch amb clau) ===== */
+const CFG_KEY = 'trec-tribunals-connexio';
+function llegeixCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; } }
+function desaCfg(c) { try { c ? localStorage.setItem(CFG_KEY, JSON.stringify(c)) : localStorage.removeItem(CFG_KEY); } catch (e) { } }
+const esAppsScript = () => typeof google !== 'undefined' && google.script && google.script.run;
+
+function api(accio, ...args) {
+  const cfg = llegeixCfg();
+  if (!cfg || !cfg.clau) return Promise.reject({ code: 'sense_connexio', message: 'Falta la clau d\'accés' });
+  if (MODE === 'apps') {
+    const n = { llegeix: 0, desa: 2, correu: 2 }[accio];
+    const a = args.slice(); while (a.length < n) a.push(null); a.push(cfg.clau);
+    return new Promise((res, rej) => {
+      google.script.run.withSuccessHandler(res).withFailureHandler(e => rej({ code: 'tool_error', message: String((e && e.message) || e) }))[accio](...a);
+    });
+  }
+  const cos = { accio, clau: cfg.clau };
+  if (accio === 'desa') { cos.fulls = args[0]; cos.versio = args[1]; }
+  if (accio === 'correu') { cos.missatge = args[0]; cos.esborrany = args[1]; }
+  return fetch(cfg.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(cos), redirect: 'follow' })
+    .then(r => r.json())
+    .catch(e => { throw { code: 'xarxa', message: 'No s\'ha pogut contactar amb el Google Sheets. Revisa l\'URL i que l\'aplicació web sigui accessible.' }; });
+}
+
+function aplicaLectura(r) {
+  S = estatDesDeFulls(r.fulls);
+  S.savedAt = r.versio || null;
+  normalitza();
+  BASE_NORM = JSON.stringify(S);
+  UI.compte = r.compte || UI.compte; if (r.quota != null) UI.quota = r.quota;
+  UI.undo = []; UI.dirty = false; UI.proposta = false;
+  if (!S.tribunals.length && S.treballs.some(preparat)) { proposa(S, { seed: 2026 }); UI.proposta = true; UI.dirty = true; }
+}
+
+async function carrega() {
+  $('#main').innerHTML = '<div class="wrap"><div class="buit-txt">Llegint el Google Sheets…</div></div>';
+  try {
+    const r = await api('llegeix');
+    if (!r || !r.ok) throw { code: r && r.error === 'clau' ? 'clau' : 'tool_error', message: r ? r.error : 'Resposta buida' };
+    aplicaLectura(r);
+    UI.esborrany = llegeixEsborrany();
+    ruta();
+  } catch (e) {
+    if (e.code === 'clau' || e.code === 'sense_connexio' || (MODE === 'web' && e.code === 'xarxa')) return pantallaConnexio(e.code === 'clau' ? 'La clau no és correcta.' : e.code === 'xarxa' ? e.message : '');
+    $('#cap').innerHTML = ''; $('#main').innerHTML = `<div class="wrap"><div class="panell"><h2>No s'ha pogut llegir el full</h2><p>${esc(e.message || e)}</p><div class="row"><button class="btn pri" id="b-reintenta">Torna-ho a provar</button></div></div></div>`;
+  }
+}
+
+function pantallaConnexio(error) {
+  const c = llegeixCfg() || {};
+  $('#cap').innerHTML = `<header class="top"><div class="wrap"><div class="titol"><h1>Tribunals del Treball de Recerca</h1><div class="sub">Connecta l'eina amb el Google Sheets del centre</div></div></div></header>`;
+  $('#main').innerHTML = `<div class="wrap" style="margin-top:20px"><div class="panell" style="max-width:640px">
+    <h2>Connexió amb el Google Sheets</h2>
+    <p>${MODE === 'web' ? 'Enganxa l\'URL de l\'aplicació web d\'Apps Script (acaba en <code>/exec</code>) i la' : 'Escriu la'} clau que surt al menú <b>Tribunals TREC › Mostra la clau d'accés</b> del Google Sheets. Es guarda només en aquest navegador.</p>
+    ${error ? `<div class="banner warn"><span>${esc(error)}</span></div>` : ''}
+    ${MODE === 'web' ? `<label class="field">URL de l'aplicació web<input id="cx-url" value="${esc(c.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>` : ''}
+    <label class="field">Clau d'accés<input id="cx-clau" value="${esc(c.clau || '')}" type="password" autocomplete="off"></label>
+    <div class="row"><button class="btn pri" id="cx-connecta">Connecta</button></div>
+  </div></div>`;
+}
+
+async function desa(forca) {
+  const btn = $('#b-desa'); if (btn) { btn.disabled = true; btn.textContent = 'Desant…'; }
+  try {
+    const r = await api('desa', fullsDesDeEstat(S), forca ? null : S.savedAt);
+    if (r && r.ok) {
+      S.savedAt = r.versio; UI.dirty = false; BASE_NORM = JSON.stringify(S); esborraEsborrany(); renderCap();
+      toast('Desat al Google Sheets.');
+      return;
+    }
+    if (r && r.error === 'conflicte') {
+      renderCap();
+      const q = await dialeg('El full ha canviat', 'Algú ha editat el Google Sheets o ha desat des d\'una altra pantalla després que l\'obrissis. Pots recarregar-lo (perds els canvis d\'aquí) o sobreescriure\'l amb la teva versió.',
+        [{ txt: 'Cancel·la', v: null }, { txt: 'Recarrega el full', v: 'r' }, { txt: 'Sobreescriu', v: 'w', pri: true }]);
+      if (q === 'w') return desa(true);
+      if (q === 'r') { esborraEsborrany(); return carrega(); }
+      return;
+    }
+    throw { message: r ? r.error : 'Resposta buida' };
+  } catch (e) {
+    desaEsborrany(); renderCap();
+    toast('No s\'ha pogut desar: ' + (e.message || e) + '. Els canvis es queden en aquest navegador.');
+  }
+}
+
+/* Adaptadors perquè la resta de l'eina funcioni igual que a claude.ai */
+function activaAdaptadors() {
+  downloadsCap = {
+    save: async ({ filename, data }) => {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: /\.html$/.test(filename) ? 'text/html' : /\.json$/.test(filename) ? 'application/json' : 'application/octet-stream' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      return { status: 'saved' };
+    }
+  };
+  mcpCap = {
+    callTool: async (server, tool, input) => {
+      const m = { to: input.to, cc: input.cc || [], assumpte: input.subject, html: input.htmlBody, text: input.body,
+        adjunts: (input.attachments || []).map(a => ({ nom: a.filename, b64: a.content, tipus: a.mimeType })) };
+      let r;
+      try { r = await api('correu', m, tool === 'create_draft'); }
+      catch (e) { throw { code: e.code === 'xarxa' ? 'server_unavailable' : 'tool_error', message: e.message }; }
+      if (!r || !r.ok) throw { code: 'tool_error', message: (r && r.error) || 'Error desconegut' };
+      if (r.quota != null) UI.quota = r.quota;
+      return { payload: r };
+    }
+  };
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'b-recarrega') {
+    if (UI.dirty) {
+      const ok = await dialeg('Recarregar el full', 'Tens canvis sense desar. Si recarregues, es perdran.', [{ txt: 'Cancel·la', v: false }, { txt: 'Recarrega', v: true, pri: true }]);
+      if (!ok) return;
+    }
+    esborraEsborrany(); return carrega();
+  }
+  if (b.id === 'b-reintenta') return carrega();
+  if (b.id === 'cx-connecta') {
+    const url = MODE === 'web' ? $('#cx-url').value.trim() : '', clau = $('#cx-clau').value.trim();
+    if (!clau) return pantallaConnexio('Escriu la clau.');
+    if (MODE === 'web' && !/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) return pantallaConnexio('L\'URL ha de ser la de l\'aplicació web d\'Apps Script (script.google.com/…/exec).');
+    desaCfg({ url, clau }); return carrega();
+  }
+  if (b.id === 'cx-desconnecta') { desaCfg(null); return pantallaConnexio(''); }
+});
+
+/* ---- Arrencada ---- */
+$('#app').innerHTML = '<div id="cap"></div><main id="main"></main>';
+MODE = esAppsScript() ? 'apps' : 'web';
+activaAdaptadors();
+artifactCap = null;
+if (!llegeixCfg()) pantallaConnexio('');
+else carrega();
+</script>
+</body>
+</html>

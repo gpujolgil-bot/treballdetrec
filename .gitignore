@@ -1,0 +1,7 @@
+# Mai pugis dades d'alumnes al repositori (és públic)
+*.xlsx
+*.ods
+*.csv
+*.json
+!apps-script/appsscript.json
+node_modules/
