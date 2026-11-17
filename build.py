@@ -1,6 +1,6 @@
 import json
 css = open('src/style.css', encoding='utf-8').read()
-js = '\n'.join(open(f, encoding='utf-8').read() for f in ['src/core.js', 'src/sheets.js', 'src/ui_body.js', 'src/dades.js', 'src/boot_sheets.js'])
+js = '\n'.join(open(f, encoding='utf-8').read() for f in ['src/core.js', 'src/sheets.js', 'src/ui_body.js', 'src/model_ui.js', 'src/dades.js', 'src/boot_sheets.js'])
 js = js.replace("if (typeof module !== 'undefined' && module.exports) module.exports", "if (false) module.exports")
 assert '</script' not in js.lower()
 buit = json.dumps({"treballs": [], "teachers": {}, "tribunals": [], "config": {}})

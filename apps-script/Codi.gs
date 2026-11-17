@@ -12,7 +12,7 @@
 const FULLS = {
   Alumnes: ['ID', 'Cognoms', 'Nom', 'Grup', 'Títol', 'Àmbit', 'Tutor/a', 'Cotutor/a', 'Estat', 'Tribunal', 'Descripció', 'Nota'],
   Professorat: ['Nom', 'Departament', 'Correu', 'Disponible', 'Cap de departament', 'Observacions'],
-  Tribunals: ['Tribunal', 'Data', 'Hora', 'Aula', 'Bloquejat', 'Membres afegits', 'Membres (automàtic)', 'Alumnes (automàtic)'],
+  Tribunals: ['Tribunal', 'Data', 'Hora', 'Aula', 'Bloquejat', 'Membres afegits', 'Tutors assistents', 'Jurat (automàtic)', 'Alumnes (automàtic)'],
   Config: ['Clau', 'Valor'],
   Enviaments: ['Professor/a', 'Correu', 'Tipus', 'Data', 'Tribunals', 'Empremta']
 };

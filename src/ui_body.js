@@ -13,6 +13,8 @@ function normalitza() {
   if (!S.config.midaTribunal) S.config.midaTribunal = 4;
   if (!S.tribunals) S.tribunals = [];
   for (const t of S.treballs) if (t.tribunal === undefined) t.tribunal = null;
+  for (const tr of S.tribunals) { if (!tr.extra) tr.extra = []; if (!tr.tutorsFora) tr.tutorsFora = []; }
+  if (!S.config.model) S.config.model = {};
   S.correu = Object.assign({}, CORREU_DEFECTE, S.correu || {});
   if (!S.enviaments) S.enviaments = {};
 }
@@ -127,7 +129,15 @@ function ambitsTrib(tr) {
   return Object.keys(c).sort((a, b) => c[b] - c[a]).map(a => chip(a, c[a])).join(' ');
 }
 function profsOrdenats(keys) { return keys.slice().sort((a, b) => nomP(a).localeCompare(nomP(b), 'ca')); }
-function tribsDe(k) { return S.tribunals.filter(tr => membresTrib(S, tr).includes(k)); }
+function tribsDe(k) { return S.tribunals.filter(tr => participantsTrib(S, tr).includes(k)); }
+function rolA(k, tr) { return membresTrib(S, tr).includes(k) ? 'jurat' : assistentsTrib(S, tr).includes(k) ? 'assistent' : ''; }
+function descripcioModel() {
+  const m = modelCfg(S);
+  if (m.K >= m.N) return `${m.N} treballs per tribunal, avaluats pels seus ${m.N} tutors`;
+  if (m.K === 0) return `${m.N} treballs per tribunal · jurat de ${m.M} sense tutors · el tutor/a assisteix ${m.tutorVota ? 'i puntua' : 'amb veu i sense vot'}`;
+  return `${m.N} treballs per tribunal · jurat de ${m.M} amb un màxim de ${m.K} tutor${m.K > 1 ? 's' : ''}`;
+}
+const ambDe = nom => /^[aeiouàèéíòóúh]/i.test(String(nom || '').trim()) ? "d'" : 'de ';
 function ambits() { return [...new Set(S.treballs.map(t => t.ambit).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ca')); }
 function resumAfinitat(t) {
   const av = avaluadors(S, t);
@@ -160,13 +170,13 @@ function renderCap() {
   let av = [0, 0, 0]; ready.forEach(t => avaluadors(S, t).forEach(a => av[a.tier]++));
   const totAv = av[0] + av[1] + av[2];
   const c = carregues(S);
-  const membres = Object.keys(c).filter(k => c[k].tribunals.length);
-  const multi = membres.filter(k => c[k].tribunals.length > 1).length;
+  const membres = Object.keys(c).filter(k => c[k].tribunals.length || c[k].assisteix.length);
+  const multi = membres.filter(k => new Set([...c[k].tribunals, ...c[k].assisteix]).size > 1).length;
   const dSaved = S.savedAt ? new Date(S.savedAt) : null;
   const desaTxt = UI.dirty ? 'Canvis sense desar' : (dSaved && !isNaN(dSaved) ? (MODE === 'artifact' ? 'Desat ' : 'Al full des de ') + dSaved.toLocaleString('ca-ES', { dateStyle: 'short', timeStyle: 'short' }) : (MODE === 'artifact' ? 'Encara no s\'ha desat' : 'Connectat al Google Sheets'));
   $('#cap').innerHTML = `
   <header class="top"><div class="wrap">
-    <div class="titol"><h1>Tribunals del Treball de Recerca</h1><div class="sub">${esc(S.curs || 'Curs 2026-2027')} · Batxillerat · ${midaT(S)} treballs per tribunal, avaluats pels seus ${midaT(S)} tutors</div></div>
+    <div class="titol"><h1>Tribunals del Treball de Recerca</h1><div class="sub">${esc(S.curs || 'Curs 2026-2027')} · Batxillerat · ${descripcioModel()}</div></div>
     <div class="desa">
       <span class="estat-desa ${UI.dirty ? 'brut' : ''}" role="status">${esc(desaTxt)}</span>
       <button class="btn" id="b-undo" ${UI.undo.length ? '' : 'disabled'}>Desfés</button>
@@ -178,19 +188,19 @@ function renderCap() {
     ${[['tribunals', 'Tribunals'], ['professorat', 'Professorat'], ['informes', 'Informes'], ['correus', 'Correus'], ['dades', 'Dades'], ['configuracio', 'Configuració']].map(([id, txt]) => `<a href="#${id}" ${UI.tab === id ? 'aria-current="page"' : ''}>${txt}${id === 'informes' && crit ? `<span class="badge">${crit}</span>` : ''}</a>`).join('')}
   </nav></div></header>
   <div class="wrap">
-    ${UI.proposta ? `<div class="banner"><span>He agrupat els treballs en tribunals de ${midaT(S)} buscant la màxima afinitat entre àmbits: cada treball l'avalua el seu tutor/a i els altres tutors del tribunal. Revisa-ho, bloqueja els tribunals que vulguis mantenir i desa.</span><button class="btn sm" id="b-tanca-prop">Entesos</button></div>` : ''}
+    ${UI.proposta ? `<div class="banner"><span>He agrupat els treballs en tribunals de ${midaT(S)} buscant la màxima afinitat entre àmbits (${descripcioModel()}). Revisa-ho, bloqueja els tribunals que vulguis mantenir i desa.</span><button class="btn sm" id="b-tanca-prop">Entesos</button></div>` : ''}
     ${UI.esborrany ? `<div class="banner warn"><span>Hi ha canvis sense desar d'una sessió anterior en aquest navegador.</span><button class="btn sm pri" id="b-recupera">Recupera'ls</button><button class="btn sm" id="b-descarta">Descarta</button></div>` : ''}
     <div class="resum">
       <div class="tile"><span>Tribunals</span><b>${S.tribunals.length}</b><small>${assignats} de ${ready.length} treballs assignats</small></div>
       <div class="tile ${av[2] ? '' : 'ok'}"><span>Avaluacions afins</span><b>${totAv ? Math.round((av[0] + av[1]) / totAv * 100) : 0}%</b><small>${av[0]} mateix dept. · ${av[1]} afins · ${av[2]} no afins</small></div>
-      <div class="tile"><span>Professorat als tribunals</span><b>${membres.length}</b><small>${multi} en més d'un tribunal</small></div>
+      <div class="tile"><span>Professorat als tribunals</span><b>${membres.length}</b><small>${multi} en més d'un tribunal · ${reciprocitats(S).length} parelles que s'avaluen mútuament</small></div>
       <div class="tile ${crit ? 'crit' : 'ok'}"><span>Incidències</span><b>${crit}</b><small>${avis} avisos · ${inc.length - crit - avis} per revisar</small></div>
     </div>
   </div>`;
 }
 
 function opcionsMembre(tr) {
-  const c = carregues(S), mem = membresTrib(S, tr), amb = ambitPrincipal(S, tr);
+  const c = carregues(S), mem = participantsTrib(S, tr), amb = ambitPrincipal(S, tr);
   const g = [[], [], []];
   for (const k of poolKeys(S)) if (!mem.includes(k)) g[tier(S, k, amb)].push(k);
   let h = '<option value="">+ Afegeix un membre…</option>';
@@ -216,15 +226,19 @@ function filaAlumne(t) {
 }
 
 function cartaTribunal(tr, inc) {
-  const ws = treballsDe(S, tr), r = rolsTrib(S, tr), mem = membresTrib(S, tr), c = carregues(S);
+  const ws = treballsDe(S, tr), r = rolsTrib(S, tr), mem = membresTrib(S, tr), assist = assistentsTrib(S, tr), c = carregues(S), mcf = modelCfg(S);
   const niv = nivell(incPerTrib(inc, tr));
+  const altresTxt = k => { const a = [...c[k].tribunals, ...c[k].assisteix].filter(id => id !== tr.id).map(id => trib(S, id)).filter(Boolean).map(x => x.num); return a.length ? ` · també al trib. ${[...new Set(a)].sort((x, y) => x - y).join(', ')}` : ''; };
+  const deQui = k => esc(r[k].map(t => t.cognoms.split(' ')[0]).join(' i '));
   const membresH = mem.map(k => {
-    const ex = (tr.extra || []).includes(k) && !r[k];
-    const altres = c[k].tribunals.filter(id => id !== tr.id).map(id => trib(S, id)).filter(Boolean).map(x => x.num);
+    const ex = !r[k];
     return `<li><span class="mnom">${esc(nomP(k))}</span> <span class="tier">${esc(dept0(k))}</span>
-      <span class="mrol">${ex ? 'membre afegit' : 'tutoritza ' + esc(r[k].map(t => t.cognoms.split(' ')[0]).join(' i '))}${altres.length ? ` · també al trib. ${altres.join(', ')}` : ''}</span>
-      ${ex ? `<button class="btn sm ghost" data-treu="${tr.id}" data-k="${esc(k)}" aria-label="Treu ${esc(nomP(k))}">Treu</button>` : ''}</li>`;
+      <span class="mrol">${ex ? 'avaluador/a' : 'tutoritza ' + deQui(k) + (mcf.tutorVota ? '' : ' (no puntua el seu alumne)')}${altresTxt(k)}</span>
+      ${ex ? `<button class="btn sm ghost" data-treu="${tr.id}" data-k="${esc(k)}" aria-label="Treu ${esc(nomP(k))}">Treu</button>` : `<button class="btn sm ghost neutre" data-assist="${tr.id}" data-k="${esc(k)}" title="Treu-lo del jurat: només assistirà a la defensa del seu alumne">Fes-lo assistent</button>`}</li>`;
   }).join('');
+  const assistH = assist.map(k => `<li><span class="mnom">${esc(nomP(k))}</span> <span class="tier">${esc(dept0(k))}</span>
+      <span class="mrol">tutor/a de ${deQui(k)} · assisteix ${mcf.tutorVota ? 'i puntua el seu alumne' : 'amb veu, sense vot'}${altresTxt(k)}</span>
+      <button class="btn sm ghost neutre" data-membre="${tr.id}" data-k="${esc(k)}" title="Fes-lo membre del jurat d'aquest tribunal">Fes-lo membre</button></li>`).join('');
   return `<article class="trib ${niv}" id="tr-${tr.id}">
     <header>
       <h2>${esc(nomTr(tr))}</h2>
@@ -234,7 +248,8 @@ function cartaTribunal(tr, inc) {
       ${!ws.length ? `<button class="btn sm" data-esborra="${tr.id}">Esborra</button>` : ''}
     </header>
     <div class="trib-cos">
-      <div class="membres"><h3>Membres (${mem.length}/${midaT(S)})</h3><ul>${membresH || '<li class="tier">Encara no hi ha cap treball.</li>'}</ul>
+      <div class="membres"><h3>Jurat (${mem.length}/${mcf.M})</h3><ul>${membresH || '<li class="tier">Encara no hi ha cap treball.</li>'}</ul>
+        ${assist.length ? `<h3>Tutors que assisteixen</h3><ul>${assistH}</ul>` : ''}
         ${ws.length ? `<select id="afg-${tr.id}" data-afegeix="${tr.id}" aria-label="Afegeix membre al ${esc(nomTr(tr))}">${opcionsMembre(tr)}</select>` : ''}
         <div class="defensa">
           <label class="field">Data<input type="date" id="d-data-${tr.id}" data-tr="${tr.id}" data-camp="data" value="${esc(tr.data)}"></label>
@@ -324,13 +339,13 @@ function renderProfessorat(m) {
   for (const k of keys) {
     const p = S.teachers[k];
     if (UI.profOrdre === 'dept' && p.depts[0] !== last) { last = p.depts[0]; rows += `<tr class="grp"><td colspan="5">${chip(last)}</td></tr>`; }
-    const trs = c[k].tribunals.map(id => trib(S, id)).filter(Boolean).sort((a, b) => a.num - b.num);
+    const trs = [...new Set([...c[k].tribunals, ...c[k].assisteix])].map(id => trib(S, id)).filter(Boolean).sort((a, b) => a.num - b.num);
     const editDept = p.foraOrg || p.afegit;
     rows += `<tr>
       <td><button class="linkbtn" data-veuprof="${esc(k)}">${esc(p.nom)}</button>${p.cap.length ? ' <span class="pill ok">cap de dept.</span>' : ''}${p.foraOrg ? ' <span class="pill avis">no és a l\'organigrama</span>' : ''}</td>
       <td>${editDept ? `<select id="pd-${esc(k)}" data-pdept="${esc(k)}" aria-label="Departament de ${esc(p.nom)}">${DEPTS.map(d => `<option ${d === p.depts[0] ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>` : esc(p.depts.join(' / '))}</td>
       <td class="n">${c[k].tutor}</td>
-      <td>${trs.length ? trs.map(tr => `<button class="pill ${(tr.extra || []).includes(k) && !rolsTrib(S, tr)[k] ? 'info' : 'ok'} linkpill" data-vestr="${tr.id}" title="${(tr.extra || []).includes(k) && !rolsTrib(S, tr)[k] ? 'Membre afegit' : 'Hi és com a tutor/a'}">T${tr.num}</button>`).join(' ') : '<span class="tier">—</span>'}</td>
+      <td>${trs.length ? trs.map(tr => { const rl = rolA(k, tr), tu = !!rolsTrib(S, tr)[k]; return `<button class="pill ${rl === 'assistent' ? 'avis' : tu ? 'ok' : 'info'} linkpill" data-vestr="${tr.id}" title="${rl === 'assistent' ? 'Hi assisteix com a tutor/a' : tu ? 'Jurat i tutor/a' : 'Jurat (avaluador/a)'}">T${tr.num}${rl === 'assistent' ? ' (tutor)' : ''}</button>`; }).join(' ') : '<span class="tier">—</span>'}</td>
       <td><label class="chk" title="Pot ser afegit/da a un tribunal on falti gent"><input type="checkbox" data-pool="${esc(k)}" ${p.pool ? 'checked' : ''}> disponible</label></td>
     </tr>`;
   }
@@ -357,7 +372,8 @@ function informeFitxes(trs) {
     const ws = treballsDe(S, tr), r = rolsTrib(S, tr);
     return `<section class="fitxa">
       <header style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><h3>${esc(nomTr(tr))}</h3><span class="tier">${esc(defensa(tr) || 'Data per concretar')}</span></header>
-      <dl><dt>Membres</dt><dd>${membresTrib(S, tr).map(k => `${esc(nomP(k))} <span class="tier">(${esc(dept0(k))}${r[k] ? '' : ', afegit'})</span>`).join('<br>')}</dd></dl>
+      <dl><dt>Jurat</dt><dd>${membresTrib(S, tr).map(k => `${esc(nomP(k))} <span class="tier">(${esc(dept0(k))}${r[k] ? ', tutor/a' : ''})</span>`).join('<br>')}</dd>
+      ${assistentsTrib(S, tr).length ? `<dt>Assisteixen</dt><dd>${assistentsTrib(S, tr).map(k => `${esc(nomP(k))} <span class="tier">(tutor/a${modelCfg(S).tutorVota ? '' : ', amb veu i sense vot'})</span>`).join('<br>')}</dd>` : ''}</dl>
       <table class="mini"><thead><tr><th>Alumne</th><th>Treball</th><th>Tutor/a</th></tr></thead><tbody>
       ${ws.map(t => `<tr><td>${esc(alumne(t))} <span class="grup">${esc(t.grup)}</span></td><td>${esc(t.titol || 'Sense títol')}<br>${chip(t.ambit)}</td><td>${esc(t.tutors.map(nomP).join(' / '))}</td></tr>`).join('')}
       </tbody></table></section>`;
@@ -367,7 +383,7 @@ function informeProfessor(keys) {
   return keys.map(k => {
     const trs = tribsDe(k).sort((a, b) => a.num - b.num);
     if (!trs.length) return '';
-    const files = trs.map(tr => treballsDe(S, tr).map((t, i) => `<tr>${i === 0 ? `<td rowspan="${treballsDe(S, tr).length}"><b>${esc(nomTr(tr))}</b><br><span class="tier">${esc(defensa(tr) || 'Per concretar')}</span></td>` : ''}<td>${esc(alumne(t))}${t.tutors.includes(k) ? ' <span class="pill ok">tutor/a</span>' : ''}</td><td>${esc(t.grup)}</td><td>${esc(t.titol)}</td></tr>`).join('')).join('');
+    const files = trs.map(tr => treballsDe(S, tr).map((t, i) => `<tr>${i === 0 ? `<td rowspan="${treballsDe(S, tr).length}"><b>${esc(nomTr(tr))}</b><br><span class="tier">${esc(defensa(tr) || 'Per concretar')}</span><br><span class="pill ${rolA(k, tr) === 'jurat' ? 'ok' : 'avis'}">${rolA(k, tr) === 'jurat' ? 'Jurat' : 'Assisteix (tutor/a)'}</span></td>` : ''}<td>${esc(alumne(t))}${t.tutors.includes(k) ? ' <span class="pill ok">tutor/a</span>' : ''}</td><td>${esc(t.grup)}</td><td>${esc(t.titol)}</td></tr>`).join('')).join('');
     const nt = S.treballs.filter(t => t.estat === 'actiu' && t.tutors.includes(k)).length;
     return `<section class="prof"><header><h3>${esc(nomP(k))}</h3><small>${esc(deptP(k))} · ${trs.length} tribunal${trs.length > 1 ? 's' : ''} · ${nt} alumne${nt === 1 ? '' : 's'} tutoritzat${nt === 1 ? '' : 's'}</small></header>
       <div class="taula-w"><table><thead><tr><th>Tribunal</th><th>Alumne</th><th>Grup</th><th>Títol</th></tr></thead><tbody>${files}</tbody></table></div></section>`;
@@ -416,10 +432,7 @@ function renderInformes(m) {
 
 function renderConfig(m) {
   m.innerHTML = `<div class="wrap">
-    <div class="panell"><h2>Mida dels tribunals</h2>
-      <div class="row"><label class="field">Treballs (i tutors) per tribunal<input type="number" min="2" max="8" id="cf-mida" value="${midaT(S)}" style="width:120px"></label></div>
-      <p>Cada tribunal avalua aquest nombre de treballs i el formen els seus tutors. Si un tribunal té menys tutors diferents que places (per exemple, quan surt un tribunal de 3 treballs), s'hi afegeix professorat afí del pool. En canviar la mida, fes «Nova proposta».</p>
-    </div>
+    ${panellModel()}
     <div class="panell"><h2>Departaments afins</h2>
       <p>Per a cada àmbit de treball, quins departaments es consideren afins. La proposta junta treballs d'àmbits afins perquè cada tutor avaluï treballs propers a la seva matèria.</p>
       <div class="afi">${DEPTS.map(d => `<div>${chip(d)}</div><div class="opc">${DEPTS.filter(x => x !== d).map(x => `<button class="tog" style="--h:${hue(x)}" data-afi="${esc(d)}" data-x="${esc(x)}" aria-pressed="${(S.config.afinitats[d] || []).includes(x)}">${esc(x)}</button>`).join('')}</div>`).join('')}</div>
@@ -439,14 +452,16 @@ function filesAlumnes() {
   const out = [];
   for (const tr of S.tribunals) for (const t of treballsDe(S, tr)) out.push({
     Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula, Alumne: alumne(t), Grup: t.grup, 'Títol': t.titol, 'Àmbit': t.ambit,
-    'Tutor/a': t.tutors.map(nomP).join(' / '), 'Altres membres del tribunal': membresTrib(S, tr).filter(k => !t.tutors.includes(k)).map(nomP).join(', ')
+    'Tutor/a': t.tutors.map(nomP).join(' / '), 'Tutor/a al jurat': t.tutors.some(k => membresTrib(S, tr).includes(k)) ? 'Sí' : 'No (assisteix)',
+    'Jurat (sense el tutor/a)': membresTrib(S, tr).filter(k => !t.tutors.includes(k)).map(nomP).join(', ')
   });
   return out;
 }
 function filesTribunals() {
   return S.tribunals.filter(tr => treballsDe(S, tr).length).map(tr => {
     const mem = membresTrib(S, tr), r = { Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula };
-    for (let i = 0; i < Math.max(midaT(S), mem.length); i++) r['Membre ' + (i + 1)] = mem[i] ? `${nomP(mem[i])} (${dept0(mem[i])})` : '';
+    for (let i = 0; i < Math.max(modelCfg(S).M, mem.length); i++) r['Jurat ' + (i + 1)] = mem[i] ? `${nomP(mem[i])} (${dept0(mem[i])})` : '';
+    r['Tutors que assisteixen'] = assistentsTrib(S, tr).map(nomP).join(', ');
     treballsDe(S, tr).forEach((t, i) => { r['Alumne ' + (i + 1)] = `${alumne(t)} (${t.grup})`; });
     return r;
   });
@@ -455,7 +470,7 @@ function filesProfessor() {
   const out = [];
   for (const k of profsOrdenats(Object.keys(S.teachers))) for (const tr of tribsDe(k).sort((a, b) => a.num - b.num)) {
     const meus = treballsDe(S, tr).filter(t => t.tutors.includes(k));
-    out.push({ 'Professor/a': nomP(k), Departament: deptP(k), Tribunal: tr.num, Data: tr.data, Hora: tr.hora, Aula: tr.aula, 'Els seus alumnes': meus.map(alumne).join('; ') || '(membre afegit)', 'Treballs que avalua': treballsDe(S, tr).length });
+    out.push({ 'Professor/a': nomP(k), Departament: deptP(k), Tribunal: tr.num, Rol: rolA(k, tr) === 'jurat' ? 'Jurat' : 'Assisteix com a tutor/a', Data: tr.data, Hora: tr.hora, Aula: tr.aula, 'Els seus alumnes': meus.map(alumne).join('; ') || '—', 'Treballs que avalua': rolA(k, tr) === 'jurat' ? treballsDe(S, tr).filter(t => !t.tutors.includes(k) || modelCfg(S).tutorVota).length : 0 });
   }
   return out;
 }
@@ -632,10 +647,13 @@ function blocTribunalPdf(doc, tr, y, kDestacat) {
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.text(pdfTxt(nomTr(tr)), 15, y);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(93, 104, 116);
   doc.text(pdfTxt('Defensa: ' + (defensa(tr) || 'per concretar')), 195, y, { align: 'right' }); doc.setTextColor(28, 39, 51);
-  doc.autoTable({ ...TAULA, startY: y + 3, head: [['Membre del tribunal', 'Departament', 'Rol']],
-    body: membresTrib(S, tr).map(k => [pdfTxt(nomP(k)) + (k === kDestacat ? '  (tu)' : ''), pdfTxt(dept0(k)), pdfTxt(r[k] ? 'Tutor/a de ' + r[k].map(alumne).join('; ') : 'Membre afegit')]),
+  const mcf = modelCfg(S), gent = [...membresTrib(S, tr).map(k => [k, 'jurat']), ...assistentsTrib(S, tr).map(k => [k, 'assist'])];
+  const rolTxt = (k, q) => q === 'jurat' ? (r[k] ? 'Jurat · tutor/a ' + ambDe(r[k][0].cognoms) + r[k].map(alumne).join('; ') : 'Jurat · avaluador/a')
+    : 'Assisteix · tutor/a ' + ambDe(r[k][0].cognoms) + r[k].map(alumne).join('; ') + (mcf.tutorVota ? '' : ' (amb veu, sense vot)');
+  doc.autoTable({ ...TAULA, startY: y + 3, head: [['Persona', 'Departament', 'Rol']],
+    body: gent.map(([k, q]) => [pdfTxt(nomP(k)) + (k === kDestacat ? '  (tu)' : ''), pdfTxt(dept0(k)), pdfTxt(rolTxt(k, q))]),
     columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 35 } },
-    didParseCell: d => { if (d.section === 'body' && kDestacat && membresTrib(S, tr)[d.row.index] === kDestacat) d.cell.styles.fontStyle = 'bold'; } });
+    didParseCell: d => { if (d.section === 'body' && kDestacat && gent[d.row.index] && gent[d.row.index][0] === kDestacat) d.cell.styles.fontStyle = 'bold'; } });
   doc.autoTable({ ...TAULA, startY: doc.lastAutoTable.finalY + 2, head: [['Alumne', 'Grup', 'Títol del treball', 'Àmbit', 'Tutor/a']],
     body: ws.map(t => [pdfTxt(alumne(t)), pdfTxt(t.grup), pdfTxt(t.titol || 'Sense títol'), pdfTxt(t.ambit), pdfTxt(t.tutors.map(nomP).join(' / '))]),
     columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 11 }, 3: { cellWidth: 25 }, 4: { cellWidth: 32 } },
@@ -693,7 +711,7 @@ const SEL = new Set();
 
 function nomPila(k) { return (nomP(k).split(' ')[0]) || nomP(k); }
 function empremta(k) {
-  return JSON.stringify(tribsDe(k).sort((a, b) => a.num - b.num).map(tr => [tr.num, tr.data, tr.hora, tr.aula, membresTrib(S, tr), treballsDe(S, tr).map(t => t.id + t.titol)]));
+  return JSON.stringify(tribsDe(k).sort((a, b) => a.num - b.num).map(tr => [tr.num, tr.data, tr.hora, tr.aula, membresTrib(S, tr), assistentsTrib(S, tr), treballsDe(S, tr).map(t => t.id + t.titol)]));
 }
 function destinataris() { return profsOrdenats(Object.keys(S.teachers).filter(k => tribsDe(k).length)); }
 function substitueix(txt, k) {
@@ -710,13 +728,15 @@ function correuDe(k) {
   for (const tr of trs) {
     const r = rolsTrib(S, tr), ws = treballsDe(S, tr);
     html += `<h3 style="margin:18px 0 6px;font-size:16px">${esc(nomTr(tr))}</h3>`;
+    const rl = rolA(k, tr), assist = assistentsTrib(S, tr), vota = modelCfg(S).tutorVota;
+    const rolTxt = rl === 'jurat' ? 'Hi formes part del jurat' + (r[k] && !vota ? ' (no puntues el teu alumne)' : '') + '.' : `Hi assisteixes com a tutor/a ${r[k] ? ambDe(r[k][0].cognoms) + r[k].map(alumne).join(' i ') : ''}${vota ? ' i puntues el teu alumne' : ', amb veu i sense vot'}.`;
+    html += `<p style="margin:0 0 6px"><b>${esc(rolTxt)}</b></p>`;
     html += `<p style="margin:0 0 6px"><b>Defensa:</b> ${esc(defensa(tr) || 'data per concretar')}</p>`;
-    html += `<p style="margin:0 0 8px"><b>Membres:</b> ${membresTrib(S, tr).map(m => esc(nomP(m)) + ` (${esc(dept0(m))})`).join(', ')}</p>`;
+    html += `<p style="margin:0 0 8px"><b>Jurat:</b> ${membresTrib(S, tr).map(m => esc(nomP(m)) + ` (${esc(dept0(m))})`).join(', ')}${assist.length ? `<br><b>Tutors que assisteixen:</b> ${assist.map(m => esc(nomP(m))).join(', ')}` : ''}</p>`;
     html += `<table style="border-collapse:collapse;font-size:13px"><tr><th ${th}>Alumne</th><th ${th}>Grup</th><th ${th}>Títol del treball</th><th ${th}>Tutor/a</th></tr>`;
     html += ws.map(t => `<tr${t.tutors.includes(k) ? ' style="background:#dcece7"' : ''}><td ${td}>${esc(alumne(t))}</td><td ${td}>${esc(t.grup)}</td><td ${td}>${esc(t.titol || 'Sense títol')}</td><td ${td}>${esc(t.tutors.map(nomP).join(' / '))}${t.tutors.includes(k) ? ' <b>(tu)</b>' : ''}</td></tr>`).join('');
     html += `</table>`;
-    txt += `\n${nomTr(tr).toUpperCase()}\nDefensa: ${defensa(tr) || 'data per concretar'}\nMembres: ${membresTrib(S, tr).map(nomP).join(', ')}\n` + ws.map(t => `- ${alumne(t)} (${t.grup}): ${t.titol || 'Sense títol'}. Tutor/a: ${t.tutors.map(nomP).join(' / ')}${t.tutors.includes(k) ? ' (tu)' : ''}`).join('\n') + '\n';
-    if (r[k] === undefined) txt += '(Hi ets com a membre afegit.)\n';
+    txt += `\n${nomTr(tr).toUpperCase()}\n${rolTxt}\nDefensa: ${defensa(tr) || 'data per concretar'}\nJurat: ${membresTrib(S, tr).map(nomP).join(', ')}${assist.length ? '\nTutors que assisteixen: ' + assist.map(nomP).join(', ') : ''}\n` + ws.map(t => `- ${alumne(t)} (${t.grup}): ${(t.titol || 'Sense títol').replace(/[.\s]+$/, '')}. Tutor/a: ${t.tutors.map(nomP).join(' / ')}${t.tutors.includes(k) ? ' (tu)' : ''}`).join('\n') + '\n';
   }
   html += `<p style="margin-top:18px">${r0(substitueix(C.tancament, k))}</p></div>`;
   txt += `\n${substitueix(C.tancament, k)}`;

@@ -207,7 +207,7 @@ function relligaProfessorat(nousTeachers) {
   const usats = new Set([...S.treballs.flatMap(t => t.tutors), ...S.tribunals.flatMap(t => t.extra || [])]);
   for (const k of usats) if (!map[k] && vells[k]) { nousTeachers[k] = Object.assign({}, vells[k], { foraOrg: true }); map[k] = k; }
   for (const t of S.treballs) t.tutors = t.tutors.map(k => map[k] || k);
-  for (const tr of S.tribunals) tr.extra = (tr.extra || []).map(k => map[k] || k);
+  for (const tr of S.tribunals) { tr.extra = (tr.extra || []).map(k => map[k] || k); tr.tutorsFora = (tr.tutorsFora || []).map(k => map[k] || k); }
   const e = {}; for (const k in S.enviaments || {}) if (map[k]) e[map[k]] = S.enviaments[k]; S.enviaments = e;
   S.teachers = nousTeachers;
 }
@@ -400,7 +400,7 @@ document.addEventListener('click', async e => {
   if (b.dataset.esbPf) {
     const k = b.dataset.esbPf, n = S.treballs.filter(t => t.tutors.includes(k)).length;
     const ok = await dialeg('Esborrar professor/a', `S'esborrarà ${nomP(k)}.${n ? ` Tutoritza ${n} alumne${n > 1 ? 's' : ''}, que quedaran sense tutor/a.` : ''}`, [{ txt: 'Cancel·la', v: false }, { txt: 'Esborra', v: true, pri: true }]);
-    if (ok) muta(() => { delete S.teachers[k]; S.treballs.forEach(t => t.tutors = t.tutors.filter(x => x !== k)); S.tribunals.forEach(tr => tr.extra = (tr.extra || []).filter(x => x !== k)); delete (S.enviaments || {})[k]; }); return;
+    if (ok) muta(() => { delete S.teachers[k]; S.treballs.forEach(t => t.tutors = t.tutors.filter(x => x !== k)); S.tribunals.forEach(tr => { tr.extra = (tr.extra || []).filter(x => x !== k); tr.tutorsFora = (tr.tutorsFora || []).filter(x => x !== k); }); delete (S.enviaments || {})[k]; }); return;
   }
   if (b.id === 'cn-fes') {
     const curs = $('#cn-curs').value.trim() || S.curs;

@@ -2,7 +2,7 @@
 const CAPS = {
   Alumnes: ['ID', 'Cognoms', 'Nom', 'Grup', 'Títol', 'Àmbit', 'Tutor/a', 'Cotutor/a', 'Estat', 'Tribunal', 'Descripció', 'Nota'],
   Professorat: ['Nom', 'Departament', 'Correu', 'Disponible', 'Cap de departament', 'Observacions'],
-  Tribunals: ['Tribunal', 'Data', 'Hora', 'Aula', 'Bloquejat', 'Membres afegits', 'Membres (automàtic)', 'Alumnes (automàtic)'],
+  Tribunals: ['Tribunal', 'Data', 'Hora', 'Aula', 'Bloquejat', 'Membres afegits', 'Tutors assistents', 'Jurat (automàtic)', 'Alumnes (automàtic)'],
   Config: ['Clau', 'Valor'],
   Enviaments: ['Professor/a', 'Correu', 'Tipus', 'Data', 'Tribunals', 'Empremta']
 };
@@ -32,7 +32,7 @@ function estatDesDeFulls(f) {
   const json = (s, d) => { try { return s ? JSON.parse(s) : d; } catch (e) { return d; } };
   const S = {
     v: 3, curs: cfg.curs || 'Curs 2026-2027', savedAt: null,
-    config: { midaTribunal: parseInt(cfg.midaTribunal, 10) || 4, afinitats: json(cfg.afinitats, null) || JSON.parse(JSON.stringify(AFINITATS_DEFECTE)) },
+    config: { midaTribunal: parseInt(cfg.midaTribunal, 10) || 4, afinitats: json(cfg.afinitats, null) || JSON.parse(JSON.stringify(AFINITATS_DEFECTE)), model: json(cfg.model, {}) },
     correu: json(cfg.correu, {}), teachers: {}, treballs: [], tribunals: [], enviaments: {}
   };
   for (const r of _files(f, 'Professorat')) {
@@ -53,7 +53,8 @@ function estatDesDeFulls(f) {
   for (const r of _files(f, 'Tribunals')) {
     const n = parseInt(r.Tribunal, 10); if (!n || trNums.has(n)) continue; trNums.add(n);
     S.tribunals.push({ id: 'T' + n, num: n, data: normData(r.Data), hora: normHora(r.Hora), aula: r.Aula, bloq: _si(r.Bloquejat),
-      extra: r['Membres afegits'].split(/[;\n]/).map(x => prof(x)).filter(Boolean) });
+      extra: (r['Membres afegits'] || '').split(/[;\n]/).map(x => prof(x)).filter(Boolean),
+      tutorsFora: (r['Tutors assistents'] || '').split(/[;\n]/).map(x => prof(x)).filter(Boolean) });
   }
   let i = 0;
   for (const r of _files(f, 'Alumnes')) {
@@ -62,7 +63,7 @@ function estatDesDeFulls(f) {
     const ambit = DEPTS.find(d => normTxt(d) === normTxt(r['Àmbit'])) || r['Àmbit'];
     const tutors = [prof(r['Tutor/a'], ambit), prof(r['Cotutor/a'], ambit)].filter(Boolean);
     const n = parseInt(r.Tribunal, 10);
-    if (n && !trNums.has(n)) { trNums.add(n); S.tribunals.push({ id: 'T' + n, num: n, data: '', hora: '', aula: '', bloq: false, extra: [] }); }
+    if (n && !trNums.has(n)) { trNums.add(n); S.tribunals.push({ id: 'T' + n, num: n, data: '', hora: '', aula: '', bloq: false, extra: [], tutorsFora: [] }); }
     S.treballs.push({ id: r.ID || 'a' + i, cognoms: r.Cognoms, nom: r.Nom, grup: r.Grup, titol: r['Títol'], descripcio: r['Descripció'], nota: r.Nota,
       ambit, ambitDeduit: /deduït/i.test(r.Nota), tutors: [...new Set(tutors)], estat, tribunal: n ? 'T' + n : null });
   }
@@ -88,9 +89,9 @@ function fullsDesDeEstat(S) {
     return [p.nom, p.depts.join(' / '), p.email || '', p.pool ? 'Sí' : 'No', p.cap && p.cap.length ? 'Sí' : '', obs];
   })];
   out.Tribunals = [CAPS.Tribunals, ...S.tribunals.slice().sort((a, b) => a.num - b.num).map(tr => [
-    tr.num, tr.data || '', tr.hora || '', tr.aula || '', tr.bloq ? 'Sí' : '', (tr.extra || []).map(nom).join('; '),
+    tr.num, tr.data || '', tr.hora || '', tr.aula || '', tr.bloq ? 'Sí' : '', (tr.extra || []).map(nom).join('; '), (tr.tutorsFora || []).map(nom).join('; '),
     membresTrib(S, tr).map(nom).join('; '), treballsDe(S, tr).map(t => `${t.cognoms}, ${t.nom}`).join('; ')])];
-  out.Config = [CAPS.Config, ['curs', S.curs || ''], ['midaTribunal', String(S.config.midaTribunal || 4)], ['afinitats', JSON.stringify(S.config.afinitats)], ['correu', JSON.stringify(S.correu || {})]];
+  out.Config = [CAPS.Config, ['curs', S.curs || ''], ['midaTribunal', String(S.config.midaTribunal || 4)], ['afinitats', JSON.stringify(S.config.afinitats)], ['model', JSON.stringify(S.config.model || {})], ['correu', JSON.stringify(S.correu || {})]];
   out.Enviaments = [CAPS.Enviaments, ...Object.keys(S.enviaments || {}).filter(k => S.teachers[k]).map(k => {
     const e = S.enviaments[k];
     return [nom(k), S.teachers[k].email || '', e.tipus === 'enviat' ? 'Enviat' : 'Esborrany', e.quan, S.tribunals.filter(tr => membresTrib(S, tr).includes(k)).map(tr => tr.num).join(', '), e.empremta || ''];
@@ -106,7 +107,7 @@ function rekeyPerNom(S) {
   for (const k in S.teachers) { const n = S.teachers[k].nom; map[k] = n; T[n] = S.teachers[k]; }
   S.teachers = T;
   for (const t of S.treballs) t.tutors = t.tutors.map(k => map[k] || k);
-  for (const tr of S.tribunals) tr.extra = (tr.extra || []).map(k => map[k] || k);
+  for (const tr of S.tribunals) { tr.extra = (tr.extra || []).map(k => map[k] || k); tr.tutorsFora = (tr.tutorsFora || []).map(k => map[k] || k); }
   const e = {}; for (const k in (S.enviaments || {})) e[map[k] || k] = S.enviaments[k]; S.enviaments = e;
   return S;
 }

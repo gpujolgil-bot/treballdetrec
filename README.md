@@ -51,6 +51,23 @@ Torna a enganxar `index.html` i/o `Codi.gs` a Apps Script. Després fes *Impleme
   - Les adreces del professorat es poden escriure a la taula, enganxar una llista o generar amb el patró del centre (`{inicial}{cognom}@…`).
   - Amb un compte de Google Workspace es poden enviar uns 1.500 correus al dia; amb Gmail personal, uns 100.
 
+## Model de tribunal i comparador
+
+A **Configuració › Model de tribunal** es pot triar com es forma cada tribunal:
+
+- **Treballs per tribunal** i **persones al jurat** (amb vot).
+- **Tutors al jurat del seu propi tribunal**:
+  - «Tots»: el jurat són els tutors dels treballs.
+  - Un màxim d'1, 2…
+  - «Cap»: jurat independent; el tutor/a assisteix a la defensa del seu alumne.
+- **Avaluacions recíproques** (A puntua un alumne de B i B un de A): permeses, evitar-les si es pot, o prohibides.
+- **El tutor/a puntua el seu propi alumne**: sí o no.
+- **Màxim de tribunals per persona** com a jurat.
+
+**Compara escenaris** calcula diverses configuracions i les mostra en una taula amb aquests indicadors: % d'avaluacions afins, parelles recíproques, persones al jurat, càrrega màxima i sessions per persona. Cada fila té un botó per aplicar-la.
+
+Amb 2 o més tutors al jurat d'un tribunal sempre hi ha reciprocitat dins del tribunal. Per evitar-la del tot cal posar com a màxim 1 tutor.
+
 ## Curs nou i correccions
 
 A la pestanya **Dades**:

@@ -250,3 +250,10 @@ table.mini th { position: static; }
 .editor .esb { color: var(--crit); }
 .mapa { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 12px; }
 .mapa select, .panell .field select { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; color: var(--ink); }
+
+/* Model i comparador */
+.membres .btn.ghost.neutre { color: var(--muted); }
+.membres .btn.ghost.neutre:hover { color: var(--accent); }
+table.comp td.mal { color: var(--crit); font-weight: 600; }
+table.comp td.be { color: var(--ok); font-weight: 600; }
+.mapa input[type=number] { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; color: var(--ink); }
