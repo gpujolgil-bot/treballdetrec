@@ -51,6 +51,21 @@ Torna a enganxar `index.html` i/o `Codi.gs` a Apps Script. Després fes *Impleme
   - Les adreces del professorat es poden escriure a la taula, enganxar una llista o generar amb el patró del centre (`{inicial}{cognom}@…`).
   - Amb un compte de Google Workspace es poden enviar uns 1.500 correus al dia; amb Gmail personal, uns 100.
 
+## Curs nou i correccions
+
+A la pestanya **Dades**:
+
+- **Alumnes** i **Professorat**: es poden editar directament. Pots canviar noms, títols, àmbit, tutor/a, cotutor/a, estat, departament i correu, i afegir o esborrar files.
+- **Importa / curs nou**:
+  1. **Comença el curs nou** buida els alumnes, els tribunals i l'estat dels correus, i conserva el professorat.
+  2. **Importa un Excel** (.xlsx, .xls, .ods o .csv) d'alumnes o de professorat. L'eina endevina quina columna és cada dada (també en fitxers sense capçalera) i ho pots corregir abans d'importar.
+  3. Si tens els títols en un fitxer i els tutors en un altre, importa el primer amb «Substitueix» i el segon amb «Afegeix i actualitza». Els alumnes es lliguen pel primer cognom i el nom.
+  4. Els noms dels tutors es lliguen amb el professorat encara que estiguin escrits diferent (Rafa Mateo → Rafael Mateo, Juanan Campos → Juan Antonio Campos). Si algun no es troba, s'afegeix marcat per revisar.
+  5. També pots enganxar l'**organigrama** amb el format «Departament Cap Departament: NOM» i un nom per línia a sota.
+- En importar alumnes, si no hi ha cap tribunal bloquejat, l'eina fa una proposta de tribunals nova.
+
+Recorda prémer **Desa al full** perquè els canvis arribin al Google Sheets.
+
 ## GitHub Pages (opcional)
 
 Només funciona si l'aplicació web té l'accés *Cualquier usuario* (la clau continua protegint les dades).

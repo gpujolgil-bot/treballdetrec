@@ -54,8 +54,8 @@ function pantallaConnexio(error) {
     <h2>Connexió amb el Google Sheets</h2>
     <p>${MODE === 'web' ? 'Enganxa l\'URL de l\'aplicació web d\'Apps Script (acaba en <code>/exec</code>) i la' : 'Escriu la'} clau que surt al menú <b>Tribunals TREC › Mostra la clau d'accés</b> del Google Sheets. Es guarda només en aquest navegador.</p>
     ${error ? `<div class="banner warn"><span>${esc(error)}</span></div>` : ''}
-    ${MODE === 'web' ? `<label class="field">URL de l'aplicació web<input id="cx-url" value="${esc(c.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>` : ''}
-    <label class="field">Clau d'accés<input id="cx-clau" value="${esc(c.clau || '')}" type="password" autocomplete="off"></label>
+    ${MODE === 'web' ? `<label class="field">URL de l'aplicació web<input id="cx-url" name="trec-url-app" value="${esc(c.url || '')}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false"></label>` : ''}
+    <label class="field">Clau d'accés<input id="cx-clau" name="trec-clau-acces" value="${esc(c.clau || '')}" type="text" autocomplete="off" spellcheck="false" class="secret"></label>
     <div class="row"><button class="btn pri" id="cx-connecta">Connecta</button></div>
   </div></div>`;
 }
@@ -121,6 +121,8 @@ document.addEventListener('click', async e => {
   if (b.id === 'cx-connecta') {
     const url = MODE === 'web' ? $('#cx-url').value.trim() : '', clau = $('#cx-clau').value.trim();
     if (!clau) return pantallaConnexio('Escriu la clau.');
+    if (MODE === 'web' && /\/home\/projects\/|\/edit\b|\/d\/[^/]+\/edit/.test(url)) return pantallaConnexio('Aquesta és l\'URL de l\'editor. Cal la de l\'aplicació web: a Apps Script, Implementar › Gestionar implementaciones, copia l\'URL que acaba en /exec.');
+    if (MODE === 'web' && !/\/exec\/?$/.test(url)) return pantallaConnexio('L\'URL ha d\'acabar en /exec (Implementar › Gestionar implementaciones).');
     if (MODE === 'web' && !/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) return pantallaConnexio('L\'URL ha de ser la de l\'aplicació web d\'Apps Script (script.google.com/…/exec).');
     desaCfg({ url, clau }); return carrega();
   }

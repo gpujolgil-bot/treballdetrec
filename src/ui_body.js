@@ -148,6 +148,7 @@ function render() {
   else if (UI.tab === 'professorat') renderProfessorat(m);
   else if (UI.tab === 'informes') renderInformes(m);
   else if (UI.tab === 'correus') renderCorreus(m);
+  else if (UI.tab === 'dades') renderDades(m);
   else renderConfig(m);
 }
 
@@ -174,7 +175,7 @@ function renderCap() {
     </div>
   </div>
   <div class="wrap"><nav class="tabs" aria-label="Seccions">
-    ${[['tribunals', 'Tribunals'], ['professorat', 'Professorat'], ['informes', 'Informes'], ['correus', 'Correus'], ['configuracio', 'Configuració']].map(([id, txt]) => `<a href="#${id}" ${UI.tab === id ? 'aria-current="page"' : ''}>${txt}${id === 'informes' && crit ? `<span class="badge">${crit}</span>` : ''}</a>`).join('')}
+    ${[['tribunals', 'Tribunals'], ['professorat', 'Professorat'], ['informes', 'Informes'], ['correus', 'Correus'], ['dades', 'Dades'], ['configuracio', 'Configuració']].map(([id, txt]) => `<a href="#${id}" ${UI.tab === id ? 'aria-current="page"' : ''}>${txt}${id === 'informes' && crit ? `<span class="badge">${crit}</span>` : ''}</a>`).join('')}
   </nav></div></header>
   <div class="wrap">
     ${UI.proposta ? `<div class="banner"><span>He agrupat els treballs en tribunals de ${midaT(S)} buscant la màxima afinitat entre àmbits: cada treball l'avalua el seu tutor/a i els altres tutors del tribunal. Revisa-ho, bloqueja els tribunals que vulguis mantenir i desa.</span><button class="btn sm" id="b-tanca-prop">Entesos</button></div>` : ''}
@@ -587,7 +588,7 @@ document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.ke
 
 function ruta() {
   const h = (location.hash || '').slice(1);
-  UI.tab = ['tribunals', 'professorat', 'informes', 'correus', 'configuracio'].includes(h) ? h : 'tribunals';
+  UI.tab = ['tribunals', 'professorat', 'informes', 'correus', 'dades', 'configuracio'].includes(h) ? h : 'tribunals';
   $('#main').innerHTML = ''; render();
   if (UI.goto) {
     const el = document.getElementById(UI.goto); UI.goto = null;

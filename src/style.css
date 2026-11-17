@@ -239,3 +239,14 @@ table.mini th { position: static; }
 .previ .mostra { background: #fff; color: #1c2733; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; overflow-x: auto; }
 @media (max-width: 1000px) { .correus-g { grid-template-columns: 1fr; } .previ { position: static; max-height: none; } }
 .previ .mostra p { margin: 0 0 10px; color: inherit; max-width: none; }
+.secret { -webkit-text-security: disc; font-family: var(--font-mono); }
+
+/* Dades */
+.editor input:not([type=checkbox]), .editor select { border: 1px solid transparent; background: transparent; border-radius: 4px; padding: 4px 6px; font: inherit; font-size: 13px; color: var(--ink); width: 100%; min-width: 120px; }
+.editor input:hover, .editor select:hover { border-color: var(--line); }
+.editor input:focus, .editor select:focus { border-color: var(--accent); background: var(--surface); }
+.editor input.curt { min-width: 90px; } .editor input.mini { min-width: 44px; width: 52px; } .editor input.llarg { min-width: 260px; }
+.editor td { padding: 3px 6px; vertical-align: middle; }
+.editor .esb { color: var(--crit); }
+.mapa { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 12px; }
+.mapa select, .panell .field select { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 8px; color: var(--ink); }
